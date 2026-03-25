@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shelf Life Chart • Project 2</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+        
+        :root {
+            --md-primary: #228B22;
+            --md-surface: #f8f9f8;
+            --md-on-surface: #212529;
+        }
+        
+        * { margin:0; padding:0; box-sizing:border-box; }
+        
+        body {
+            font-family: 'Inter', system_ui, -apple-system, sans-serif;
+            background: #f0f0f0;
+            color: var(--md-on-surface);
+            line-height: 1.5;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .app-bar {
+            background: var(--md-primary);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .app-bar h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .gear {
+            font-size: 28px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .main {
+            padding: 24px 16px 40px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-height: 58vh;
+            overflow-y: auto;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 118px;
+        }
+        
+        .product-card:hover,
+        .product-card:active {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(34,139,34,0.25);
+        }
+        
+        .product-card.selected {
+            background: #e8f4e8;
+            border: 3px solid var(--md-primary);
+        }
+        
+        .product-name {
+            font-size: 17px;
+            font-weight: 600;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        
+        .shelf-life {
+            margin-top: 8px;
+            font-size: 13px;
+            background: #e8f4e8;
+            color: var(--md-primary);
+            padding: 4px 18px;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+        
+        button {
+            background: var(--md-primary);
+            color: white;
+            border: none;
+            padding: 18px 24px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            width: 100%;
+            margin-top: 28px;
+            box-shadow: 0 6px 16px rgba(34,139,34,0.3);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        button:active {
+            transform: scale(0.96);
+        }
+        
+        .result {
+            margin-top: 32px;
+            background: white;
+            border-radius: 28px;
+            padding: 32px 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+        
+        .result h3 {
+            color: var(--md-primary);
+            font-size: 17px;
+            margin-bottom: 20px;
+        }
+        
+        .expiry-card {
+            background: white;
+            border: 3px solid #222;
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 280px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        .expiry-product {
+            font-size: 21px;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+        
+        .expiry-weekday {
+            font-size: 27px;
+            font-weight: 700;
+            color: #e63939;
+            margin-bottom: 8px;
+        }
+        
+        .expiry-date {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .product-grid::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-bar">
+        <h1>Shelf Life Chart</h1>
+        <span onclick="toggleSettings()" class="gear">⚙️</span>
+    </div>
+
+    <div class="main">
+        <div class="product-grid" id="productList"></div>
+
+        <button onclick="calculateExpiry()">Calculate Expiry &amp; Generate Label</button>
+
+        <div class="result" id="resultPanel">
+            <h3>Your Expiry Date</h3>
+            <div class="expiry-card" id="previewLabel">
+                <div class="expiry-product" id="previewProduct"></div>
+                <div class="expiry-weekday" id="previewWeekday"></div>
+                <div class="expiry-date" id="previewDate"></div>
+            </div>
+            <p style="margin-top:24px; font-size:14px; color:#666;">Calculated using today’s date</p>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settingsPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:flex-end;">
+        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto;">
+            <div style="padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:10;">
+                <h2 style="margin:0; font-size:22px;">Item Settings • Campaign 2</h2>
+                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:44px; height:44px; border-radius:50%; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+            </div>
+            
+            <div style="padding:24px;">
+                <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+                    <thead>
+                        <tr style="background:#f8f9fa;">
+                            <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Name</th>
+                            <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Days</th>
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="settingsItemsList"></tbody>
+                </table>
+
+                <h3 id="settingsFormTitle" style="margin-bottom:12px;">Add New Item</h3>
+                <input id="newName" placeholder="Product name" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px; margin-bottom:16px;">
+                <div>
+                    <label style="font-size:14px;">Days</label>
+                    <input id="newDays" type="number" placeholder="10" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px;">
+                </div>
+
+                <button onclick="addOrUpdateItem()" id="settingsAddBtn" style="margin-top:28px; background:#228B22;">Add / Update Item</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let shelfLifeItems = [
+            {code:"STR07", name:"STRIPPERS", days:10},
+            {code:"WIN06", name:"WINGS", days:9},
+            {code:"CHI24", name:"TENDERS", days:9},
+            {code:"BEE01", name:"BEEF", days:9},
+            {code:"CHI06", name:"CHICKEN STRIPS", days:9},
+            {code:"SAU16", name:"SAUSAGE", days:6},
+            {code:"MB05", name:"MEATBALLS", days:9},
+            {code:"PAS06", name:"MAC N CHEESE", days:6},
+            {code:"CHE24", name:"STRING CHEESE", days:7},
+            {code:"KK04", name:"KICKERS", days:10},
+            {code:"PW10", name:"POTATO WEDGES", days:7},
+            {code:"PFR02", name:"FRIES", days:7},
+            {code:"CD09", name:"DOUBLE CHOCOLATE & CARAMEL COOKIES", days:14},
+            {code:"CD23", name:"NEW DOMINOS COOKIES WITH CREME EGG", days:14},
+            {code:"CD09", name:"COOKIES", days:17},
+            {code:"CHI08", name:"TANDOORI CHICKEN", days:10},
+            {code:"BAC04", name:"BACON (FROZEN)", days:10},
+            {code:"CND01", name:"CHICKEN NDUJA", days:12},
+            {code:"TCF07", name:"THIN CRUST SHELLS", days:21},
+            {code:"WRP01", name:"WRAPS", days:22},
+            {code:"PEP01", name:"PEPPERONI", days:12},
+            {code:"VEG01", name:"GREEN CHILLIES / MUSHROOMS / ONIONS / PEPPERS / TOMATOES", days:2},
+            {code:"MOZ01", name:"MOZZARELLA CHEESE - STANDARD", days:9},
+            {code:"PS01", name:"PIZZA SAUCE", days:10},
+            {code:"BS01", name:"BURGER SAUCE", days:14},
+            {code:"HH01", name:"HABANERO HOT HONEY", days:35}
+        ];
+
+        let selectedProduct = null;
+        let editingIndex = -1;
+
+        if (localStorage.getItem("shelfLifeItems")) {
+            shelfLifeItems = JSON.parse(localStorage.getItem("shelfLifeItems"));
+        }
+
+        function saveItems() {
+            localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems));
+        }
+
+        function renderProductList() {
+            const container = document.getElementById("productList");
+            container.innerHTML = "";
+
+            const customItems = shelfLifeItems.filter(item => item.code === "CUSTOM");
+            const originalItems = shelfLifeItems.filter(item => item.code !== "CUSTOM");
+
+            customItems.forEach(item => {
+                const div = document.createElement("div");
+                div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
+                div.innerHTML = `
+                    <div class="product-name">${item.name}</div>
+                    <div class="shelf-life">${item.days === 999 ? 'BB date' : item.days + ' days'}</div>
+                `;
+                div.onclick = () => {
+                    selectedProduct = item;
+                    renderProductList();
+                };
+                container.appendChild(div);
+            });
+
+            originalItems.forEach(item => {
+                const div = document.createElement("div");
+                div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
+                div.innerHTML = `
+                    <div class="product-name">${item.name}</div>
+                    <div class="shelf-life">${item.days === 999 ? 'BB date' : item.days + ' days'}</div>
+                `;
+                div.onclick = () => {
+                    selectedProduct = item;
+                    renderProductList();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function calculateExpiry() {
+            if (!selectedProduct) return alert("Please select an item first");
+
+            const today = new Date();
+            const expiryDate = new Date(today);
+            expiryDate.setDate(expiryDate.getDate() + (selectedProduct.days === 999 ? 0 : selectedProduct.days) - 1);
+
+            const formatUKDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const getWeekday = (d) => d.toLocaleDateString('en-GB', { weekday: 'long' });
+
+            const expiry = {
+                product: selectedProduct.name,
+                date: formatUKDate(expiryDate),
+                weekday: getWeekday(expiryDate)
+            };
+
+            document.getElementById("previewProduct").textContent = expiry.product;
+            document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${expiry.weekday}</span>`;
+            document.getElementById("previewDate").textContent = expiry.date;
+            document.getElementById("resultPanel").classList.add("show");
+
+            setTimeout(() => {
+                document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
+            }, 100);
+
+            window.currentExpiry = expiry;
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById("settingsPanel");
+            panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+            if (panel.style.display === "flex") renderSettingsList();
+        }
+
+        function renderSettingsList() {
+            const tbody = document.getElementById("settingsItemsList");
+            tbody.innerHTML = "";
+            shelfLifeItems.forEach((item, i) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td style="padding:14px 12px; border-bottom:1px solid #eee;">${item.name}</td>
+                    <td style="padding:14px 12px; border-bottom:1px solid #eee;">${item.days === 999 ? 'BB date' : item.days}</td>
+                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">
+                        <button onclick="editItem(${i});" style="background:#08f;color:white;border:none;padding:6px 14px;border-radius:8px;margin-right:6px;">Edit</button>
+                        <button onclick="deleteItem(${i});" style="background:#c00;color:white;border:none;padding:6px 14px;border-radius:8px;">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editItem(index) {
+            editingIndex = index;
+            const item = shelfLifeItems[index];
+            document.getElementById("settingsFormTitle").textContent = "Edit Item";
+            document.getElementById("newName").value = item.name;
+            document.getElementById("newDays").value = item.days === 999 ? "" : item.days;
+        }
+
+        function deleteItem(index) {
+            if (confirm("Delete this item permanently?")) {
+                shelfLifeItems.splice(index, 1);
+                saveItems();
+                renderSettingsList();
+                renderProductList();
+            }
+        }
+
+        function addOrUpdateItem() {
+            const name = document.getElementById("newName").value.trim();
+            let days = parseInt(document.getElementById("newDays").value) || 999;
+
+            if (!name) return alert("Please enter a product name");
+
+            if (editingIndex >= 0) {
+                shelfLifeItems[editingIndex] = {code: "CUSTOM", name, days};
+            } else {
+                shelfLifeItems.push({code: "CUSTOM", name, days});
+            }
+
+            saveItems();
+            renderSettingsList();
+            renderProductList();
+
+            editingIndex = -1;
+            document.getElementById("settingsFormTitle").textContent = "Add New Item";
+            document.getElementById("newName").value = "";
+            document.getElementById("newDays").value = "";
+            alert("Item saved!");
+        }
+
+        window.onload = function() {
+            renderProductList();
+        };
+    </script>
+</body>
+</html>

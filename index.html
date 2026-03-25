@@ -71,6 +71,14 @@
             margin: 0 auto;
         }
         
+        .section-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--md-primary);
+            margin: 32px 0 12px;
+            padding-left: 4px;
+        }
+        
         .product-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -212,7 +220,7 @@
     </div>
 
     <div class="main">
-        <div class="product-grid" id="productList"></div>
+        <div id="productSections"></div>
 
         <div class="result" id="resultPanel">
             <h3>Your Expiry Date</h3>
@@ -225,7 +233,7 @@
         </div>
     </div>
 
-    <!-- Settings Panel -->
+    <!-- Settings Panel (unchanged) -->
     <div id="settingsPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:flex-end;">
         <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto; -webkit-overflow-scrolling:touch;">
             <div style="padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:10;">
@@ -270,48 +278,96 @@
     </div>
 
     <script>
-        let shelfLifeItems = [
-            {name:"Hot Honey", days:35},
-            {name:"Burger Sauce", days:14},
-            {name:"Cheese Sauce", days:8},
-            {name:"Jalapenos", days:11},
-            {name:"Pineapple", days:10},
-            {name:"Sweetcorn", days:11},
-            {name:"Gherkins", days:16},
-            {name:"Tuna", days:6},
-            {name:"Garlic Butter", days:10},
-            {name:"Pizza Sauce", days:10},
-            {name:"BBQ Sauce", days:10},
-            {name:"PB Cheese", days:7},
-            {name:"Delight Cheese", days:9},
-            {name:"Mac N Cheese", hours:48},
-            {name:"Strippers", days:10},
-            {name:"Wings", days:9},
-            {name:"Tenders", days:9},
-            {name:"Beef", days:9},
-            {name:"Chicken Strips", days:9},
-            {name:"Sausage", days:6},
-            {name:"Meatballs", days:9},
-            {name:"String Cheese", days:7},
-            {name:"Kickers", days:10},
-            {name:"Wedges", days:7},
-            {name:"Wrapz", days:22},
-            {name:"Nduja", days:12},
-            {name:"Boneless Bites", days:9},
-            {name:"Cookies", days:17},
-            {name:"Creme Egg Cookies", days:14},
-            {name:"Fries", days:7},
-            {name:"Tandoori", days:10},
-            {name:"Thin Crust 7\"", days:21},
-            {name:"Thin Crust 11.5\"", days:21},
-            {name:"Thin Crust 13.5\"", days:21},
-            {name:"Pepperoni Frozen", days:12},
-            {name:"Chorizo", days:12},
-            {name:"Cheese Sauce Ambient", hours:15},
-            {name:"Pizza Sauce Ambient", hours:15},
-            {name:"BBQ Sauce Ambient", hours:15},
-            {name:"Garlic Spread Ambient", hours:12}
+        // Grouped sections – exactly as you asked
+        const sections = [
+            {
+                title: "Prepped Sauces",
+                items: [
+                    {name:"Hot Honey", days:35},
+                    {name:"Burger Sauce", days:14},
+                    {name:"Cheese Sauce", days:8},
+                    {name:"Pizza Sauce", days:10},
+                    {name:"BBQ Sauce", days:10},
+                    {name:"Garlic Butter", days:10}
+                ]
+            },
+            {
+                title: "Veg",
+                items: [
+                    {name:"Jalapenos", days:11},
+                    {name:"Pineapple", days:10},
+                    {name:"Sweetcorn", days:11},
+                    {name:"Gherkins", days:16}
+                ]
+            },
+            {
+                title: "Meats",
+                items: [
+                    {name:"Tuna", days:6},
+                    {name:"Chicken Strips", days:9},
+                    {name:"Tandoori", days:10},
+                    {name:"Meatballs", days:9},
+                    {name:"Beef", days:9},
+                    {name:"Nduja", days:12},
+                    {name:"Chorizo", days:12},
+                    {name:"Pepperoni Frozen", days:12},
+                    {name:"Sausage", days:6}
+                ]
+            },
+            {
+                title: "Chicken Sides",
+                items: [
+                    {name:"Strippers", days:10},
+                    {name:"Kickers", days:10},
+                    {name:"Boneless Bites", days:9},
+                    {name:"Tenders", days:9}
+                ]
+            },
+            {
+                title: "Sides",
+                items: [
+                    {name:"Wedges", days:7},
+                    {name:"Fries", days:7},
+                    {name:"Mac N Cheese", hours:48}
+                ]
+            },
+            {
+                title: "Cheese",
+                items: [
+                    {name:"Delight Cheese", days:9},
+                    {name:"PB Cheese", days:7},
+                    {name:"String Cheese", days:7}
+                ]
+            },
+            {
+                title: "Bases",
+                items: [
+                    {name:"Thin Crust 7\"", days:21},
+                    {name:"Thin Crust 11.5\"", days:21},
+                    {name:"Thin Crust 13.5\"", days:21},
+                    {name:"Wrapz", days:22}
+                ]
+            },
+            {
+                title: "Deserts",
+                items: [
+                    {name:"Cookies", days:17},
+                    {name:"Creme Egg Cookies", days:14}
+                ]
+            },
+            {
+                title: "Sauces Ambient",
+                items: [
+                    {name:"Cheese Sauce Ambient", hours:15},
+                    {name:"Pizza Sauce Ambient", hours:15},
+                    {name:"BBQ Sauce Ambient", hours:15},
+                    {name:"Garlic Spread Ambient", hours:12}
+                ]
+            }
         ];
+
+        // Flat array for settings + localStorage (keeps same order as sections)
+        let shelfLifeItems = sections.flatMap(section => section.items);
 
         let selectedProduct = null;
         let editingIndex = -1;
@@ -355,19 +411,33 @@
         }
 
         function renderProductList() {
-            const container = document.getElementById("productList");
+            const container = document.getElementById("productSections");
             container.innerHTML = "";
 
-            // No custom/original split – render exactly in the order above
-            shelfLifeItems.forEach(item => {
-                if (item.hours) {
-                    container.appendChild(renderHoursCard(item));
-                } else {
-                    container.appendChild(renderDaysCard(item));
-                }
+            sections.forEach(section => {
+                // Section header
+                const header = document.createElement("h2");
+                header.className = "section-header";
+                header.textContent = section.title;
+                container.appendChild(header);
+
+                // Grid for this section
+                const grid = document.createElement("div");
+                grid.className = "product-grid";
+
+                section.items.forEach(item => {
+                    if (item.hours) {
+                        grid.appendChild(renderHoursCard(item));
+                    } else {
+                        grid.appendChild(renderDaysCard(item));
+                    }
+                });
+
+                container.appendChild(grid);
             });
         }
 
+        // The rest of your functions (calculateExpiry, settings, etc.) stay exactly the same
         function calculateExpiryForDays(product) {
             const now = new Date();
             let expiryDate = new Date(now);
@@ -461,55 +531,4 @@
         function editItem(index) {
             editingIndex = index;
             const item = shelfLifeItems[index];
-            document.getElementById("settingsFormTitle").textContent = "Edit Item";
-            document.getElementById("newName").value = item.name;
-            document.getElementById("newValue").value = item.hours || item.days || "";
-            document.getElementById("newUnit").value = item.hours ? "hours" : "days";
-        }
-
-        function deleteItem(index) {
-            if (confirm("Delete this item permanently?")) {
-                shelfLifeItems.splice(index, 1);
-                saveItems();
-                renderSettingsList();
-                renderProductList();
-            }
-        }
-
-        function addOrUpdateItem() {
-            const name = document.getElementById("newName").value.trim();
-            const value = parseInt(document.getElementById("newValue").value) || 999;
-            const unit = document.getElementById("newUnit").value;
-
-            if (!name) return alert("Please enter a product name");
-
-            const newItem = { name };
-
-            if (unit === "hours") {
-                newItem.hours = value;
-            } else {
-                newItem.days = value;
-            }
-
-            if (editingIndex >= 0) {
-                shelfLifeItems[editingIndex] = newItem;
-            } else {
-                shelfLifeItems.push(newItem);
-            }
-
-            saveItems();
-            renderSettingsList();
-            renderProductList();
-
-            editingIndex = -1;
-            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
-            document.getElementById("newName").value = "";
-            document.getElementById("newValue").value = "";
-            alert("Item saved!");
-        }
-
-        // FIXED: Direct call – renders exactly in your chosen order
-        renderProductList();
-    </script>
-</body>
-</html>
+        

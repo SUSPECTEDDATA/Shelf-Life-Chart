@@ -185,6 +185,18 @@
             border-radius: 10px;
             margin: 0 3px;
         }
+
+        #errorDebug {
+            margin: 20px 16px;
+            padding: 16px;
+            background: #ffe6e6;
+            color: #c00;
+            border-radius: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 14px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -197,6 +209,7 @@
 
     <div class="main">
         <div id="productSections"></div>
+        <div id="errorDebug"></div>
 
         <div class="result" id="resultPanel">
             <h3>Your Expiry Date</h3>
@@ -254,65 +267,37 @@
     </div>
 
     <script>
-        // === GROUPED SECTIONS (Wings now added under Chicken Sides) ===
+        // === GROUPED SECTIONS (Wings under Chicken Sides) ===
         let sections = [
             { title: "Prepped Sauces", items: [
-                {name:"Hot Honey", days:35},
-                {name:"Burger Sauce", days:14},
-                {name:"Cheese Sauce", days:8},
-                {name:"Pizza Sauce", days:10},
-                {name:"BBQ Sauce", days:10},
-                {name:"Garlic Butter", days:10}
+                {name:"Hot Honey", days:35},{name:"Burger Sauce", days:14},{name:"Cheese Sauce", days:8},
+                {name:"Pizza Sauce", days:10},{name:"BBQ Sauce", days:10},{name:"Garlic Butter", days:10}
             ]},
             { title: "Veg", items: [
-                {name:"Jalapenos", days:11},
-                {name:"Pineapple", days:10},
-                {name:"Sweetcorn", days:11},
-                {name:"Gherkins", days:16}
+                {name:"Jalapenos", days:11},{name:"Pineapple", days:10},{name:"Sweetcorn", days:11},{name:"Gherkins", days:16}
             ]},
             { title: "Meats", items: [
-                {name:"Tuna", days:6},
-                {name:"Chicken Strips", days:9},
-                {name:"Tandoori", days:10},
-                {name:"Meatballs", days:9},
-                {name:"Beef", days:9},
-                {name:"Nduja", days:12},
-                {name:"Chorizo", days:12},
-                {name:"Pepperoni Frozen", days:12},
-                {name:"Sausage", days:6}
+                {name:"Tuna", days:6},{name:"Chicken Strips", days:9},{name:"Tandoori", days:10},{name:"Meatballs", days:9},
+                {name:"Beef", days:9},{name:"Nduja", days:12},{name:"Chorizo", days:12},{name:"Pepperoni Frozen", days:12},{name:"Sausage", days:6}
             ]},
             { title: "Chicken Sides", items: [
-                {name:"Strippers", days:10},
-                {name:"Kickers", days:10},
-                {name:"Boneless Bites", days:9},
-                {name:"Tenders", days:9},
-                {name:"Wings", days:9}
+                {name:"Strippers", days:10},{name:"Kickers", days:10},{name:"Boneless Bites", days:9},{name:"Tenders", days:9},{name:"Wings", days:9}
             ]},
             { title: "Sides", items: [
-                {name:"Wedges", days:7},
-                {name:"Fries", days:7},
-                {name:"Mac N Cheese", hours:48}
+                {name:"Wedges", days:7},{name:"Fries", days:7},{name:"Mac N Cheese", hours:48}
             ]},
             { title: "Cheese", items: [
-                {name:"Delight Cheese", days:9},
-                {name:"PB Cheese", days:7},
-                {name:"String Cheese", days:7}
+                {name:"Delight Cheese", days:9},{name:"PB Cheese", days:7},{name:"String Cheese", days:7}
             ]},
             { title: "Bases", items: [
-                {name:"Thin Crust 7\"", days:21},
-                {name:"Thin Crust 11.5\"", days:21},
-                {name:"Thin Crust 13.5\"", days:21},
-                {name:"Wrapz", days:22}
+                {name:"Thin Crust 7\"", days:21},{name:"Thin Crust 11.5\"", days:21},{name:"Thin Crust 13.5\"", days:21},{name:"Wrapz", days:22}
             ]},
             { title: "Deserts", items: [
-                {name:"Cookies", days:17},
-                {name:"Creme Egg Cookies", days:14}
+                {name:"Cookies", days:17},{name:"Creme Egg Cookies", days:14}
             ]},
             { title: "Sauces Ambient", items: [
-                {name:"Cheese Sauce Ambient", hours:15},
-                {name:"Pizza Sauce Ambient", hours:15},
-                {name:"BBQ Sauce Ambient", hours:15},
-                {name:"Garlic Spread Ambient", hours:12}
+                {name:"Cheese Sauce Ambient", hours:15},{name:"Pizza Sauce Ambient", hours:15},
+                {name:"BBQ Sauce Ambient", hours:15},{name:"Garlic Spread Ambient", hours:12}
             ]}
         ];
 
@@ -324,25 +309,18 @@
             shelfLifeItems = JSON.parse(localStorage.getItem("shelfLifeItems"));
         }
 
-        function saveItems() {
-            localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems));
-        }
+        function saveItems() { localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems)); }
 
         function syncSectionsFromFlat() {
             const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
             sections.forEach(section => {
-                section.items = section.items
-                    .map(oldItem => itemMap.get(oldItem.name))
-                    .filter(Boolean);
+                section.items = section.items.map(oldItem => itemMap.get(oldItem.name)).filter(Boolean);
             });
             const existingNames = new Set(sections.flatMap(s => s.items.map(i => i.name)));
             const newItems = shelfLifeItems.filter(item => !existingNames.has(item.name));
             if (newItems.length > 0) {
                 let custom = sections.find(s => s.title === "Custom Items");
-                if (!custom) {
-                    custom = { title: "Custom Items", items: [] };
-                    sections.push(custom);
-                }
+                if (!custom) { custom = { title: "Custom Items", items: [] }; sections.push(custom); }
                 custom.items.push(...newItems);
             }
         }
@@ -350,69 +328,33 @@
         function renderDaysCard(item) {
             const div = document.createElement("div");
             div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
-            
-            const nameEl = document.createElement("div");
-            nameEl.className = "product-name";
-            nameEl.textContent = item.name;
-            
-            const shelfEl = document.createElement("div");
-            shelfEl.className = "shelf-life";
-            shelfEl.textContent = item.days + " days";
-            
-            div.appendChild(nameEl);
-            div.appendChild(shelfEl);
-            
-            div.onclick = () => { 
-                selectedProduct = item; 
-                renderProductList(); 
-                calculateExpiry(); 
-            };
+            const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
+            const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = item.days + " days";
+            div.appendChild(nameEl); div.appendChild(shelfEl);
+            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
             return div;
         }
 
         function renderHoursCard(item) {
             const div = document.createElement("div");
             div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
-            
-            const nameEl = document.createElement("div");
-            nameEl.className = "product-name";
-            nameEl.textContent = item.name;
-            
-            const shelfEl = document.createElement("div");
-            shelfEl.className = "shelf-life";
-            shelfEl.textContent = item.hours + " hours";
-            
-            div.appendChild(nameEl);
-            div.appendChild(shelfEl);
-            
-            div.onclick = () => { 
-                selectedProduct = item; 
-                renderProductList(); 
-                calculateExpiry(); 
-            };
+            const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
+            const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = item.hours + " hours";
+            div.appendChild(nameEl); div.appendChild(shelfEl);
+            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
             return div;
         }
 
         function renderProductList() {
             const container = document.getElementById("productSections");
             container.innerHTML = "";
-
             sections.forEach(section => {
                 if (section.items.length === 0) return;
-
-                const header = document.createElement("h2");
-                header.className = "section-header";
-                header.textContent = section.title;
+                const header = document.createElement("h2"); header.className = "section-header"; header.textContent = section.title;
                 container.appendChild(header);
-
-                const grid = document.createElement("div");
-                grid.className = "product-grid";
+                const grid = document.createElement("div"); grid.className = "product-grid";
                 section.items.forEach(item => {
-                    if (item.hours) {
-                        grid.appendChild(renderHoursCard(item));
-                    } else {
-                        grid.appendChild(renderDaysCard(item));
-                    }
+                    grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
                 });
                 container.appendChild(grid);
             });
@@ -433,20 +375,17 @@
         function calculateExpiry() {
             if (!selectedProduct) return;
             const expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
-
             const formatUKDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
             const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
             const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
             document.getElementById("previewProduct").textContent = selectedProduct.name;
             document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
-
             if (selectedProduct.hours) {
                 document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + ' <span style="font-size:28px;">' + formatTime(expiryDate) + '</span>';
             } else {
                 document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate);
             }
-
             document.getElementById("resultPanel").classList.add("show");
             setTimeout(() => document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" }), 100);
         }
@@ -461,10 +400,7 @@
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
             [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
-            saveItems();
-            syncSectionsFromFlat();
-            renderSettingsList();
-            renderProductList();
+            saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
         }
 
         function renderSettingsList() {
@@ -472,8 +408,7 @@
             tbody.innerHTML = "";
             shelfLifeItems.forEach((item, i) => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
+                tr.innerHTML = `<td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
                     <td style="padding:16px 8px; border-bottom:1px solid #eee;">${item.name}</td>
                     <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.days || ''}</td>
                     <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.hours || ''}</td>
@@ -482,8 +417,7 @@
                         <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
                         <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#08f;color:white;">Edit</button>
                         <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c00;color:white;">Delete</button>
-                    </td>
-                `;
+                    </td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -500,5 +434,39 @@
         function deleteItem(index) {
             if (confirm("Delete this item permanently?")) {
                 shelfLifeItems.splice(index, 1);
-                saveItems();
-                syncSectionsFromFla
+                saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
+            }
+        }
+
+        function addOrUpdateItem() {
+            const name = document.getElementById("newName").value.trim();
+            const value = parseInt(document.getElementById("newValue").value) || 0;
+            const unit = document.getElementById("newUnit").value;
+            if (!name) return alert("Please enter a product name");
+            const newItem = { name };
+            if (unit === "hours") newItem.hours = value; else newItem.days = value;
+            if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
+            saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
+            editingIndex = -1;
+            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
+            document.getElementById("newName").value = "";
+            document.getElementById("newValue").value = "";
+            alert("Item saved!");
+        }
+
+        // === DEBUG WRAPPER ===
+        function showError(err) {
+            const debug = document.getElementById("errorDebug");
+            debug.textContent = "ERROR:\n" + err.message + "\n\n" + err.stack;
+            debug.style.display = "block";
+        }
+
+        try {
+            syncSectionsFromFlat();
+            renderProductList();
+        } catch (err) {
+            showError(err);
+        }
+    </script>
+</body>
+</html>

@@ -172,7 +172,7 @@
             margin-bottom: 8px;
         }
         
-        .expiry-date {
+        .expiry-datetime {
             font-size: 36px;
             font-weight: 700;
             letter-spacing: -1px;
@@ -204,9 +204,9 @@
             <div class="expiry-card" id="previewLabel">
                 <div class="expiry-product" id="previewProduct"></div>
                 <div class="expiry-weekday" id="previewWeekday"></div>
-                <div class="expiry-date" id="previewDate"></div>
+                <div class="expiry-datetime" id="previewDate"></div>
             </div>
-            <p style="margin-top:24px; font-size:14px; color:#666;">Calculated using today’s date</p>
+            <p style="margin-top:24px; font-size:14px; color:#666;">Calculated using today’s exact time</p>
         </div>
     </div>
 
@@ -223,21 +223,32 @@
                     <thead>
                         <tr style="background:#f8f9fa;">
                             <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Name</th>
-                            <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Days</th>
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Days</th>
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Hours</th>
                             <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="settingsItemsList"></tbody>
                 </table>
 
-                <h3 id="settingsFormTitle" style="margin-bottom:12px;">Add New Item</h3>
-                <input id="newName" placeholder="Product name" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px; margin-bottom:16px;">
-                <div>
-                    <label style="font-size:14px;">Days</label>
-                    <input id="newDays" type="number" placeholder="10" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px;">
+                <h3 id="settingsFormTitle" style="margin-bottom:12px;">Add / Edit Item</h3>
+                
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:14px; display:block; margin-bottom:8px;">Unit</label>
+                    <select id="newUnit" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px;">
+                        <option value="days">Days</option>
+                        <option value="hours">Hours</option>
+                    </select>
                 </div>
 
-                <button onclick="addOrUpdateItem()" id="settingsAddBtn" style="margin-top:28px; background:#228B22;">Add / Update Item</button>
+                <div style="margin-bottom:16px;">
+                    <label style="font-size:14px; display:block; margin-bottom:8px;">Value</label>
+                    <input id="newValue" type="number" placeholder="10" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px;">
+                </div>
+
+                <input id="newName" placeholder="Product name" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px;">
+
+                <button onclick="addOrUpdateItem()" id="settingsAddBtn" style="margin-top:28px; background:#228B22;">Save Item</button>
             </div>
         </div>
     </div>
@@ -251,7 +262,7 @@
             {code:"CHI06", name:"CHICKEN STRIPS", days:9},
             {code:"SAU16", name:"SAUSAGE", days:6},
             {code:"MB05", name:"MEATBALLS", days:9},
-            {code:"PAS06", name:"MAC N CHEESE", days:6},
+            {code:"PAS06", name:"MAC N CHEESE", hours:48},
             {code:"CHE24", name:"STRING CHEESE", days:7},
             {code:"KK04", name:"KICKERS", days:10},
             {code:"PW10", name:"POTATO WEDGES", days:7},
@@ -279,8 +290,38 @@
             shelfLifeItems = JSON.parse(localStorage.getItem("shelfLifeItems"));
         }
 
+        // FORCE MAC N CHEESE TO 48 HOURS
+        let macIndex = shelfLifeItems.findIndex(item => item.name === "MAC N CHEESE");
+        if (macIndex !== -1) {
+            shelfLifeItems[macIndex] = {code: "PAS06", name: "MAC N CHEESE", hours: 48};
+        } else {
+            shelfLifeItems.unshift({code: "PAS06", name: "MAC N CHEESE", hours: 48});
+        }
+
         function saveItems() {
             localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems));
+        }
+
+        function renderDaysCard(item) {
+            const div = document.createElement("div");
+            div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
+            div.innerHTML = `
+                <div class="product-name">${item.name}</div>
+                <div class="shelf-life">${item.days} days</div>
+            `;
+            div.onclick = () => { selectedProduct = item; renderProductList(); };
+            return div;
+        }
+
+        function renderHoursCard(item) {
+            const div = document.createElement("div");
+            div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
+            div.innerHTML = `
+                <div class="product-name">${item.name}</div>
+                <div class="shelf-life">${item.hours} hours</div>
+            `;
+            div.onclick = () => { selectedProduct = item; renderProductList(); };
+            return div;
         }
 
         function renderProductList() {
@@ -290,61 +331,69 @@
             const customItems = shelfLifeItems.filter(item => item.code === "CUSTOM");
             const originalItems = shelfLifeItems.filter(item => item.code !== "CUSTOM");
 
-            customItems.forEach(item => {
-                const div = document.createElement("div");
-                div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
-                div.innerHTML = `
-                    <div class="product-name">${item.name}</div>
-                    <div class="shelf-life">${item.days === 999 ? 'BB date' : item.days + ' days'}</div>
-                `;
-                div.onclick = () => {
-                    selectedProduct = item;
-                    renderProductList();
-                };
-                container.appendChild(div);
+            [...customItems, ...originalItems].forEach(item => {
+                if (item.hours) {
+                    container.appendChild(renderHoursCard(item));
+                } else {
+                    container.appendChild(renderDaysCard(item));
+                }
             });
+        }
 
-            originalItems.forEach(item => {
-                const div = document.createElement("div");
-                div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
-                div.innerHTML = `
-                    <div class="product-name">${item.name}</div>
-                    <div class="shelf-life">${item.days === 999 ? 'BB date' : item.days + ' days'}</div>
-                `;
-                div.onclick = () => {
-                    selectedProduct = item;
-                    renderProductList();
-                };
-                container.appendChild(div);
-            });
+        // DAYS PIPELINE – unchanged and always worked
+        function calculateExpiryForDays(product) {
+            const now = new Date();
+            let expiryDate = new Date(now);
+            expiryDate.setDate(expiryDate.getDate() + (product.days || 0) - 1);
+            return expiryDate;
+        }
+
+        // COMPLETELY SEPARATE HOURS PIPELINE – direct timestamp addition
+        function calculateExpiryForHours(product) {
+            const now = new Date();
+            const msToAdd = product.hours * 60 * 60 * 1000;
+            return new Date(now.getTime() + msToAdd);
         }
 
         function calculateExpiry() {
             if (!selectedProduct) return alert("Please select an item first");
 
-            const today = new Date();
-            const expiryDate = new Date(today);
-            expiryDate.setDate(expiryDate.getDate() + (selectedProduct.days === 999 ? 0 : selectedProduct.days) - 1);
+            let expiryDate;
+            if (selectedProduct.hours) {
+                expiryDate = calculateExpiryForHours(selectedProduct);
+            } else {
+                expiryDate = calculateExpiryForDays(selectedProduct);
+            }
 
             const formatUKDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
             const getWeekday = (d) => d.toLocaleDateString('en-GB', { weekday: 'long' });
+            const formatTime = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
             const expiry = {
                 product: selectedProduct.name,
                 date: formatUKDate(expiryDate),
-                weekday: getWeekday(expiryDate)
+                weekday: getWeekday(expiryDate),
+                time: formatTime(expiryDate)
             };
 
+            // EXPLICIT PREVIEW UPDATE – no placeholders, no shared variables
             document.getElementById("previewProduct").textContent = expiry.product;
             document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${expiry.weekday}</span>`;
-            document.getElementById("previewDate").textContent = expiry.date;
+
+            // HOURS PIPELINE – date + time
+            if (selectedProduct.hours) {
+                document.getElementById("previewDate").innerHTML = expiry.date + ' <span style="font-size:28px;">' + expiry.time + '</span>';
+            } 
+            // DAYS PIPELINE – only date
+            else {
+                document.getElementById("previewDate").innerHTML = expiry.date;
+            }
+
             document.getElementById("resultPanel").classList.add("show");
 
             setTimeout(() => {
                 document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" });
             }, 100);
-
-            window.currentExpiry = expiry;
         }
 
         function toggleSettings() {
@@ -357,10 +406,14 @@
             const tbody = document.getElementById("settingsItemsList");
             tbody.innerHTML = "";
             shelfLifeItems.forEach((item, i) => {
+                // FIXED: separate columns for Days and Hours – no more placeholders ever
+                const daysValue = item.days ? item.days : '';
+                const hoursValue = item.hours ? item.hours : '';
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td style="padding:14px 12px; border-bottom:1px solid #eee;">${item.name}</td>
-                    <td style="padding:14px 12px; border-bottom:1px solid #eee;">${item.days === 999 ? 'BB date' : item.days}</td>
+                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">${daysValue}</td>
+                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">${hoursValue}</td>
                     <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">
                         <button onclick="editItem(${i});" style="background:#08f;color:white;border:none;padding:6px 14px;border-radius:8px;margin-right:6px;">Edit</button>
                         <button onclick="deleteItem(${i});" style="background:#c00;color:white;border:none;padding:6px 14px;border-radius:8px;">Delete</button>
@@ -375,7 +428,8 @@
             const item = shelfLifeItems[index];
             document.getElementById("settingsFormTitle").textContent = "Edit Item";
             document.getElementById("newName").value = item.name;
-            document.getElementById("newDays").value = item.days === 999 ? "" : item.days;
+            document.getElementById("newValue").value = item.hours || item.days || "";
+            document.getElementById("newUnit").value = item.hours ? "hours" : "days";
         }
 
         function deleteItem(index) {
@@ -389,14 +443,23 @@
 
         function addOrUpdateItem() {
             const name = document.getElementById("newName").value.trim();
-            let days = parseInt(document.getElementById("newDays").value) || 999;
+            const value = parseInt(document.getElementById("newValue").value) || 999;
+            const unit = document.getElementById("newUnit").value;
 
             if (!name) return alert("Please enter a product name");
 
-            if (editingIndex >= 0) {
-                shelfLifeItems[editingIndex] = {code: "CUSTOM", name, days};
+            const newItem = { code: "CUSTOM", name };
+
+            if (unit === "hours") {
+                newItem.hours = value;
             } else {
-                shelfLifeItems.push({code: "CUSTOM", name, days});
+                newItem.days = value;
+            }
+
+            if (editingIndex >= 0) {
+                shelfLifeItems[editingIndex] = newItem;
+            } else {
+                shelfLifeItems.push(newItem);
             }
 
             saveItems();
@@ -404,9 +467,9 @@
             renderProductList();
 
             editingIndex = -1;
-            document.getElementById("settingsFormTitle").textContent = "Add New Item";
+            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
             document.getElementById("newName").value = "";
-            document.getElementById("newDays").value = "";
+            document.getElementById("newValue").value = "";
             alert("Item saved!");
         }
 

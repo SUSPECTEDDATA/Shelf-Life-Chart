@@ -22,6 +22,7 @@
             line-height: 1.5;
             padding: 0;
             min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .app-bar {
@@ -42,14 +43,26 @@
             font-weight: 600;
         }
         
+        .app-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
         .gear {
             font-size: 28px;
             cursor: pointer;
-            width: 44px;
-            height: 44px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+        
+        .gear:active {
+            background: rgba(255,255,255,0.2);
         }
         
         .main {
@@ -62,8 +75,7 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            max-height: 58vh;
-            overflow-y: auto;
+            /* Full page scroll - no internal scroll box */
         }
         
         .product-card {
@@ -79,6 +91,7 @@
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 118px;
+            touch-action: manipulation;
         }
         
         .product-card:hover,
@@ -107,24 +120,6 @@
             padding: 4px 18px;
             border-radius: 9999px;
             font-weight: 500;
-        }
-        
-        button {
-            background: var(--md-primary);
-            color: white;
-            border: none;
-            padding: 18px 24px;
-            font-size: 18px;
-            font-weight: 600;
-            border-radius: 50px;
-            width: 100%;
-            margin-top: 28px;
-            box-shadow: 0 6px 16px rgba(34,139,34,0.3);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        button:active {
-            transform: scale(0.96);
         }
         
         .result {
@@ -183,21 +178,43 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .product-grid::-webkit-scrollbar {
+        /* Only hide scrollbar on the settings panel now */
+        #settingsItemsList::-webkit-scrollbar {
             display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 16px 8px !important;
+            font-size: 15px;
+        }
+        .mobile-action-btn {
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            margin: 0 3px;
+            touch-action: manipulation;
         }
     </style>
 </head>
 <body>
     <div class="app-bar">
         <h1>Shelf Life Chart</h1>
-        <span onclick="toggleSettings()" class="gear">⚙️</span>
+        <div class="app-bar-actions">
+            <span onclick="toggleSettings()" class="gear">⚙️</span>
+        </div>
     </div>
 
     <div class="main">
         <div class="product-grid" id="productList"></div>
-
-        <button onclick="calculateExpiry()">Calculate Expiry &amp; Generate Label</button>
 
         <div class="result" id="resultPanel">
             <h3>Your Expiry Date</h3>
@@ -212,19 +229,20 @@
 
     <!-- Settings Panel -->
     <div id="settingsPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:flex-end;">
-        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto;">
+        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto; -webkit-overflow-scrolling:touch;">
             <div style="padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:10;">
                 <h2 style="margin:0; font-size:22px;">Item Settings • Campaign 2</h2>
-                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:44px; height:44px; border-radius:50%; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:48px; height:48px; border-radius:50%; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
             </div>
             
             <div style="padding:24px;">
                 <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
                     <thead>
                         <tr style="background:#f8f9fa;">
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:40px;">#</th>
                             <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Name</th>
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Days</th>
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Hours</th>
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:70px;">Days</th>
+                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:70px;">Hours</th>
                             <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Actions</th>
                         </tr>
                     </thead>
@@ -255,32 +273,32 @@
 
     <script>
         let shelfLifeItems = [
-            {code:"STR07", name:"STRIPPERS", days:10},
-            {code:"WIN06", name:"WINGS", days:9},
-            {code:"CHI24", name:"TENDERS", days:9},
-            {code:"BEE01", name:"BEEF", days:9},
-            {code:"CHI06", name:"CHICKEN STRIPS", days:9},
-            {code:"SAU16", name:"SAUSAGE", days:6},
-            {code:"MB05", name:"MEATBALLS", days:9},
-            {code:"PAS06", name:"MAC N CHEESE", hours:48},
-            {code:"CHE24", name:"STRING CHEESE", days:7},
-            {code:"KK04", name:"KICKERS", days:10},
-            {code:"PW10", name:"POTATO WEDGES", days:7},
-            {code:"PFR02", name:"FRIES", days:7},
-            {code:"CD09", name:"DOUBLE CHOCOLATE & CARAMEL COOKIES", days:14},
-            {code:"CD23", name:"NEW DOMINOS COOKIES WITH CREME EGG", days:14},
-            {code:"CD09", name:"COOKIES", days:17},
-            {code:"CHI08", name:"TANDOORI CHICKEN", days:10},
-            {code:"BAC04", name:"BACON (FROZEN)", days:10},
-            {code:"CND01", name:"CHICKEN NDUJA", days:12},
-            {code:"TCF07", name:"THIN CRUST SHELLS", days:21},
-            {code:"WRP01", name:"WRAPS", days:22},
-            {code:"PEP01", name:"PEPPERONI", days:12},
-            {code:"VEG01", name:"GREEN CHILLIES / MUSHROOMS / ONIONS / PEPPERS / TOMATOES", days:2},
-            {code:"MOZ01", name:"MOZZARELLA CHEESE - STANDARD", days:9},
-            {code:"PS01", name:"PIZZA SAUCE", days:10},
-            {code:"BS01", name:"BURGER SAUCE", days:14},
-            {code:"HH01", name:"HABANERO HOT HONEY", days:35}
+            {code:"STR07", name:"Strippers", days:10},
+            {code:"WIN06", name:"Wings", days:9},
+            {code:"CHI24", name:"Tenders", days:9},
+            {code:"BEE01", name:"Beef", days:9},
+            {code:"CHI06", name:"Chicken Strips", days:9},
+            {code:"SAU16", name:"Sausage", days:6},
+            {code:"MB05", name:"Meatballs", days:9},
+            {code:"PAS06", name:"Mac N Cheese", hours:48},
+            {code:"CHE24", name:"String Cheese", days:7},
+            {code:"KK04", name:"Kickers", days:10},
+            {code:"PW10", name:"Potato Wedges", days:7},
+            {code:"PFR02", name:"Fries", days:7},
+            {code:"CD09", name:"Double Chocolate & Caramel Cookies", days:14},
+            {code:"CD23", name:"New Dominos Cookies With Creme Egg", days:14},
+            {code:"CD09", name:"Cookies", days:17},
+            {code:"CHI08", name:"Tandoori Chicken", days:10},
+            {code:"BAC04", name:"Bacon (Frozen)", days:10},
+            {code:"CND01", name:"Chicken Nduja", days:12},
+            {code:"TCF07", name:"Thin Crust Shells", days:21},
+            {code:"WRP01", name:"Wraps", days:22},
+            {code:"PEP01", name:"Pepperoni", days:12},
+            {code:"VEG01", name:"Green Chillies / Mushrooms / Onions / Peppers / Tomatoes", days:2},
+            {code:"MOZ01", name:"Mozzarella Cheese - Standard", days:9},
+            {code:"PS01", name:"Pizza Sauce", days:10},
+            {code:"BS01", name:"Burger Sauce", days:14},
+            {code:"HH01", name:"Habanero Hot Honey", days:35}
         ];
 
         let selectedProduct = null;
@@ -291,11 +309,11 @@
         }
 
         // FORCE MAC N CHEESE TO 48 HOURS
-        let macIndex = shelfLifeItems.findIndex(item => item.name === "MAC N CHEESE");
+        let macIndex = shelfLifeItems.findIndex(item => item.name.toLowerCase() === "mac n cheese");
         if (macIndex !== -1) {
-            shelfLifeItems[macIndex] = {code: "PAS06", name: "MAC N CHEESE", hours: 48};
+            shelfLifeItems[macIndex] = {code: "PAS06", name: "Mac N Cheese", hours: 48};
         } else {
-            shelfLifeItems.unshift({code: "PAS06", name: "MAC N CHEESE", hours: 48});
+            shelfLifeItems.unshift({code: "PAS06", name: "Mac N Cheese", hours: 48});
         }
 
         function saveItems() {
@@ -309,7 +327,11 @@
                 <div class="product-name">${item.name}</div>
                 <div class="shelf-life">${item.days} days</div>
             `;
-            div.onclick = () => { selectedProduct = item; renderProductList(); };
+            div.onclick = () => { 
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
@@ -320,7 +342,11 @@
                 <div class="product-name">${item.name}</div>
                 <div class="shelf-life">${item.hours} hours</div>
             `;
-            div.onclick = () => { selectedProduct = item; renderProductList(); };
+            div.onclick = () => { 
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
@@ -340,7 +366,6 @@
             });
         }
 
-        // DAYS PIPELINE – unchanged and always worked
         function calculateExpiryForDays(product) {
             const now = new Date();
             let expiryDate = new Date(now);
@@ -348,7 +373,6 @@
             return expiryDate;
         }
 
-        // COMPLETELY SEPARATE HOURS PIPELINE – direct timestamp addition
         function calculateExpiryForHours(product) {
             const now = new Date();
             const msToAdd = product.hours * 60 * 60 * 1000;
@@ -356,7 +380,7 @@
         }
 
         function calculateExpiry() {
-            if (!selectedProduct) return alert("Please select an item first");
+            if (!selectedProduct) return;
 
             let expiryDate;
             if (selectedProduct.hours) {
@@ -376,16 +400,12 @@
                 time: formatTime(expiryDate)
             };
 
-            // EXPLICIT PREVIEW UPDATE – no placeholders, no shared variables
             document.getElementById("previewProduct").textContent = expiry.product;
             document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${expiry.weekday}</span>`;
 
-            // HOURS PIPELINE – date + time
             if (selectedProduct.hours) {
                 document.getElementById("previewDate").innerHTML = expiry.date + ' <span style="font-size:28px;">' + expiry.time + '</span>';
-            } 
-            // DAYS PIPELINE – only date
-            else {
+            } else {
                 document.getElementById("previewDate").innerHTML = expiry.date;
             }
 
@@ -402,21 +422,34 @@
             if (panel.style.display === "flex") renderSettingsList();
         }
 
+        function moveItem(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
+            
+            [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
+            
+            saveItems();
+            renderSettingsList();
+            renderProductList();
+        }
+
         function renderSettingsList() {
             const tbody = document.getElementById("settingsItemsList");
             tbody.innerHTML = "";
             shelfLifeItems.forEach((item, i) => {
-                // FIXED: separate columns for Days and Hours – no more placeholders ever
                 const daysValue = item.days ? item.days : '';
                 const hoursValue = item.hours ? item.hours : '';
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td style="padding:14px 12px; border-bottom:1px solid #eee;">${item.name}</td>
-                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">${daysValue}</td>
-                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">${hoursValue}</td>
-                    <td style="padding:14px 12px; border-bottom:1px solid #eee; text-align:center;">
-                        <button onclick="editItem(${i});" style="background:#08f;color:white;border:none;padding:6px 14px;border-radius:8px;margin-right:6px;">Edit</button>
-                        <button onclick="deleteItem(${i});" style="background:#c00;color:white;border:none;padding:6px 14px;border-radius:8px;">Delete</button>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555; font-size:16px;">${i+1}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; font-size:16px;">${item.name}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-size:16px;">${daysValue}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-size:16px;">${hoursValue}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">
+                        <button onclick="moveItem(${i}, -1)" class="mobile-action-btn" style="background:#555;color:white;">↑</button>
+                        <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
+                        <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#08f;color:white;">Edit</button>
+                        <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c00;color:white;">Delete</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -473,9 +506,4 @@
             alert("Item saved!");
         }
 
-        window.onload = function() {
-            renderProductList();
-        };
-    </script>
-</body>
-</html>
+  

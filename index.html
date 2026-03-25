@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shelf Life Chart • Project 2</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
         :root {
             --md-primary: #228B22;
@@ -41,12 +41,6 @@
         .app-bar h1 {
             font-size: 24px;
             font-weight: 600;
-        }
-        
-        .app-bar-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
         }
         
         .gear {
@@ -98,13 +92,6 @@
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 118px;
-            touch-action: manipulation;
-        }
-        
-        .product-card:hover,
-        .product-card:active {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(34,139,34,0.25);
         }
         
         .product-card.selected {
@@ -144,12 +131,6 @@
             animation: fadeIn 0.4s ease forwards;
         }
         
-        .result h3 {
-            color: var(--md-primary);
-            font-size: 17px;
-            margin-bottom: 20px;
-        }
-        
         .expiry-card {
             background: white;
             border: 3px solid #222;
@@ -179,14 +160,10 @@
             font-weight: 700;
             letter-spacing: -1px;
         }
-        
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
-        }
-
-        #settingsItemsList::-webkit-scrollbar {
-            display: none;
         }
 
         table {
@@ -207,14 +184,6 @@
             padding: 8px 12px;
             border-radius: 10px;
             margin: 0 3px;
-            touch-action: manipulation;
-        }
-
-        #loading {
-            text-align: center;
-            padding: 40px 20px;
-            font-size: 18px;
-            color: #666;
         }
     </style>
 </head>
@@ -227,8 +196,7 @@
     </div>
 
     <div class="main">
-        <div id="loading">Loading shelf life chart...</div>
-        <div id="productSections" style="display:none;"></div>
+        <div id="productSections"></div>
 
         <div class="result" id="resultPanel">
             <h3>Your Expiry Date</h3>
@@ -243,10 +211,10 @@
 
     <!-- Settings Panel -->
     <div id="settingsPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:flex-end;">
-        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto; -webkit-overflow-scrolling:touch;">
+        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto;">
             <div style="padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:10;">
                 <h2 style="margin:0; font-size:22px;">Item Settings • Campaign 2</h2>
-                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:48px; height:48px; border-radius:50%; font-size:28px; line-height:1; display:flex; align-items:center; justify-content:center; cursor:pointer;">✕</button>
+                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:48px; height:48px; border-radius:50%; font-size:28px;">✕</button>
             </div>
             
             <div style="padding:24px;">
@@ -280,13 +248,14 @@
 
                 <input id="newName" placeholder="Product name" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px;">
 
-                <button onclick="addOrUpdateItem()" id="settingsAddBtn" style="margin-top:28px; background:#228B22;">Save Item</button>
+                <button onclick="addOrUpdateItem()" style="margin-top:28px; background:#228B22; color:white; border:none; width:100%; padding:14px; border-radius:16px; font-size:16px;">Save Item</button>
             </div>
         </div>
     </div>
 
     <script>
-        const sections = [
+        // === GROUPED SECTIONS (Wings now added under Chicken Sides) ===
+        let sections = [
             { title: "Prepped Sauces", items: [
                 {name:"Hot Honey", days:35},
                 {name:"Burger Sauce", days:14},
@@ -316,7 +285,8 @@
                 {name:"Strippers", days:10},
                 {name:"Kickers", days:10},
                 {name:"Boneless Bites", days:9},
-                {name:"Tenders", days:9}
+                {name:"Tenders", days:9},
+                {name:"Wings", days:9}
             ]},
             { title: "Sides", items: [
                 {name:"Wedges", days:7},
@@ -346,7 +316,7 @@
             ]}
         ];
 
-        let shelfLifeItems = sections.flatMap(s => s.items);
+        let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
         let selectedProduct = null;
         let editingIndex = -1;
 
@@ -358,28 +328,78 @@
             localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems));
         }
 
+        function syncSectionsFromFlat() {
+            const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
+            sections.forEach(section => {
+                section.items = section.items
+                    .map(oldItem => itemMap.get(oldItem.name))
+                    .filter(Boolean);
+            });
+            const existingNames = new Set(sections.flatMap(s => s.items.map(i => i.name)));
+            const newItems = shelfLifeItems.filter(item => !existingNames.has(item.name));
+            if (newItems.length > 0) {
+                let custom = sections.find(s => s.title === "Custom Items");
+                if (!custom) {
+                    custom = { title: "Custom Items", items: [] };
+                    sections.push(custom);
+                }
+                custom.items.push(...newItems);
+            }
+        }
+
         function renderDaysCard(item) {
             const div = document.createElement("div");
-            div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
-            div.innerHTML = '<div class="product-name">' + item.name + '</div><div class="shelf-life">' + item.days + ' days</div>';
-            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+            div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
+            
+            const nameEl = document.createElement("div");
+            nameEl.className = "product-name";
+            nameEl.textContent = item.name;
+            
+            const shelfEl = document.createElement("div");
+            shelfEl.className = "shelf-life";
+            shelfEl.textContent = item.days + " days";
+            
+            div.appendChild(nameEl);
+            div.appendChild(shelfEl);
+            
+            div.onclick = () => { 
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
         function renderHoursCard(item) {
             const div = document.createElement("div");
-            div.className = `product-card ${selectedProduct && selectedProduct.name === item.name ? 'selected' : ''}`;
-            div.innerHTML = '<div class="product-name">' + item.name + '</div><div class="shelf-life">' + item.hours + ' hours</div>';
-            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+            div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
+            
+            const nameEl = document.createElement("div");
+            nameEl.className = "product-name";
+            nameEl.textContent = item.name;
+            
+            const shelfEl = document.createElement("div");
+            shelfEl.className = "shelf-life";
+            shelfEl.textContent = item.hours + " hours";
+            
+            div.appendChild(nameEl);
+            div.appendChild(shelfEl);
+            
+            div.onclick = () => { 
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
         function renderProductList() {
             const container = document.getElementById("productSections");
-            const loading = document.getElementById("loading");
             container.innerHTML = "";
 
             sections.forEach(section => {
+                if (section.items.length === 0) return;
+
                 const header = document.createElement("h2");
                 header.className = "section-header";
                 header.textContent = section.title;
@@ -388,13 +408,14 @@
                 const grid = document.createElement("div");
                 grid.className = "product-grid";
                 section.items.forEach(item => {
-                    grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
+                    if (item.hours) {
+                        grid.appendChild(renderHoursCard(item));
+                    } else {
+                        grid.appendChild(renderDaysCard(item));
+                    }
                 });
                 container.appendChild(grid);
             });
-
-            loading.style.display = "none";
-            container.style.display = "block";
         }
 
         function calculateExpiryForDays(product) {
@@ -406,32 +427,24 @@
 
         function calculateExpiryForHours(product) {
             const now = new Date();
-            const msToAdd = product.hours * 60 * 60 * 1000;
-            return new Date(now.getTime() + msToAdd);
+            return new Date(now.getTime() + product.hours * 60 * 60 * 1000);
         }
 
         function calculateExpiry() {
             if (!selectedProduct) return;
-            let expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
+            const expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
 
-            const formatUKDate = (d) => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
-            const getWeekday = (d) => d.toLocaleDateString('en-GB', { weekday: 'long' });
-            const formatTime = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            const formatUKDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
+            const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-            const expiry = {
-                product: selectedProduct.name,
-                date: formatUKDate(expiryDate),
-                weekday: getWeekday(expiryDate),
-                time: formatTime(expiryDate)
-            };
-
-            document.getElementById("previewProduct").textContent = expiry.product;
-            document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${expiry.weekday}</span>`;
+            document.getElementById("previewProduct").textContent = selectedProduct.name;
+            document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
 
             if (selectedProduct.hours) {
-                document.getElementById("previewDate").innerHTML = expiry.date + ' <span style="font-size:28px;">' + expiry.time + '</span>';
+                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + ' <span style="font-size:28px;">' + formatTime(expiryDate) + '</span>';
             } else {
-                document.getElementById("previewDate").innerHTML = expiry.date;
+                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate);
             }
 
             document.getElementById("resultPanel").classList.add("show");
@@ -449,6 +462,7 @@
             if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
             [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
             saveItems();
+            syncSectionsFromFlat();
             renderSettingsList();
             renderProductList();
         }
@@ -457,14 +471,12 @@
             const tbody = document.getElementById("settingsItemsList");
             tbody.innerHTML = "";
             shelfLifeItems.forEach((item, i) => {
-                const daysValue = item.days ? item.days : '';
-                const hoursValue = item.hours ? item.hours : '';
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555; font-size:16px;">${i+1}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; font-size:16px;">${item.name}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-size:16px;">${daysValue}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-size:16px;">${hoursValue}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee;">${item.name}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.days || ''}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.hours || ''}</td>
                     <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">
                         <button onclick="moveItem(${i}, -1)" class="mobile-action-btn" style="background:#555;color:white;">↑</button>
                         <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
@@ -489,17 +501,4 @@
             if (confirm("Delete this item permanently?")) {
                 shelfLifeItems.splice(index, 1);
                 saveItems();
-                renderSettingsList();
-                renderProductList();
-            }
-        }
-
-        function addOrUpdateItem() {
-            const name = document.getElementById("newName").value.trim();
-            const value = parseInt(document.getElementById("newValue").value) || 999;
-            const unit = document.getElementById("newUnit").value;
-
-            if (!name) return alert("Please enter a product name");
-
-            const newItem = { name };
-            if (unit === "hours") newItem.hours = value; e
+                syncSectionsFromFla

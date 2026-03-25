@@ -271,32 +271,46 @@
 
     <script>
         let shelfLifeItems = [
-            {code:"STR07", name:"Strippers", days:10},
-            {code:"WIN06", name:"Wings", days:9},
-            {code:"CHI24", name:"Tenders", days:9},
-            {code:"BEE01", name:"Beef", days:9},
-            {code:"CHI06", name:"Chicken Strips", days:9},
-            {code:"SAU16", name:"Sausage", days:6},
-            {code:"MB05", name:"Meatballs", days:9},
-            {code:"PAS06", name:"Mac N Cheese", hours:48},
-            {code:"CHE24", name:"String Cheese", days:7},
-            {code:"KK04", name:"Kickers", days:10},
-            {code:"PW10", name:"Potato Wedges", days:7},
-            {code:"PFR02", name:"Fries", days:7},
-            {code:"CD09", name:"Double Chocolate & Caramel Cookies", days:14},
-            {code:"CD23", name:"New Dominos Cookies With Creme Egg", days:14},
-            {code:"CD09", name:"Cookies", days:17},
-            {code:"CHI08", name:"Tandoori Chicken", days:10},
-            {code:"BAC04", name:"Bacon (Frozen)", days:10},
-            {code:"CND01", name:"Chicken Nduja", days:12},
-            {code:"TCF07", name:"Thin Crust Shells", days:21},
-            {code:"WRP01", name:"Wraps", days:22},
-            {code:"PEP01", name:"Pepperoni", days:12},
-            {code:"VEG01", name:"Green Chillies / Mushrooms / Onions / Peppers / Tomatoes", days:2},
-            {code:"MOZ01", name:"Mozzarella Cheese - Standard", days:9},
-            {code:"PS01", name:"Pizza Sauce", days:10},
-            {code:"BS01", name:"Burger Sauce", days:14},
-            {code:"HH01", name:"Habanero Hot Honey", days:35}
+            {name:"Hot Honey", days:35},
+            {name:"Burger Sauce", days:14},
+            {name:"Cheese Sauce", days:8},
+            {name:"Jalapenos", days:11},
+            {name:"Pineapple", days:10},
+            {name:"Sweetcorn", days:11},
+            {name:"Gherkins", days:16},
+            {name:"Tuna", days:6},
+            {name:"Garlic Butter", days:10},
+            {name:"Pizza Sauce", days:10},
+            {name:"BBQ Sauce", days:10},
+            {name:"PB Cheese", days:7},
+            {name:"Delight Cheese", days:9},
+            {name:"Mac N Cheese", hours:48},
+            {name:"Strippers", days:10},
+            {name:"Wings", days:9},
+            {name:"Tenders", days:9},
+            {name:"Beef", days:9},
+            {name:"Chicken Strips", days:9},
+            {name:"Sausage", days:6},
+            {name:"Meatballs", days:9},
+            {name:"String Cheese", days:7},
+            {name:"Kickers", days:10},
+            {name:"Wedges", days:7},
+            {name:"Wrapz", days:22},
+            {name:"Nduja", days:12},
+            {name:"Boneless Bites", days:9},
+            {name:"Cookies", days:17},
+            {name:"Creme Egg Cookies", days:14},
+            {name:"Fries", days:7},
+            {name:"Tandoori", days:10},
+            {name:"Thin Crust 7\"", days:21},
+            {name:"Thin Crust 11.5\"", days:21},
+            {name:"Thin Crust 13.5\"", days:21},
+            {name:"Pepperoni Frozen", days:12},
+            {name:"Chorizo", days:12},
+            {name:"Cheese Sauce Ambient", hours:15},
+            {name:"Pizza Sauce Ambient", hours:15},
+            {name:"BBQ Sauce Ambient", hours:15},
+            {name:"Garlic Spread Ambient", hours:12}
         ];
 
         let selectedProduct = null;
@@ -304,14 +318,6 @@
 
         if (localStorage.getItem("shelfLifeItems")) {
             shelfLifeItems = JSON.parse(localStorage.getItem("shelfLifeItems"));
-        }
-
-        // FORCE MAC N CHEESE TO 48 HOURS
-        let macIndex = shelfLifeItems.findIndex(item => item.name.toLowerCase() === "mac n cheese");
-        if (macIndex !== -1) {
-            shelfLifeItems[macIndex] = {code: "PAS06", name: "Mac N Cheese", hours: 48};
-        } else {
-            shelfLifeItems.unshift({code: "PAS06", name: "Mac N Cheese", hours: 48});
         }
 
         function saveItems() {
@@ -352,10 +358,8 @@
             const container = document.getElementById("productList");
             container.innerHTML = "";
 
-            const customItems = shelfLifeItems.filter(item => item.code === "CUSTOM");
-            const originalItems = shelfLifeItems.filter(item => item.code !== "CUSTOM");
-
-            [...customItems, ...originalItems].forEach(item => {
+            // No custom/original split – render exactly in the order above
+            shelfLifeItems.forEach(item => {
                 if (item.hours) {
                     container.appendChild(renderHoursCard(item));
                 } else {
@@ -479,7 +483,7 @@
 
             if (!name) return alert("Please enter a product name");
 
-            const newItem = { code: "CUSTOM", name };
+            const newItem = { name };
 
             if (unit === "hours") {
                 newItem.hours = value;
@@ -504,7 +508,7 @@
             alert("Item saved!");
         }
 
-        // FIXED: Direct call – no more window.onload needed
+        // FIXED: Direct call – renders exactly in your chosen order
         renderProductList();
     </script>
 </body>

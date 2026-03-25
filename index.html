@@ -75,7 +75,6 @@
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 12px;
-            /* Full page scroll - no internal scroll box */
         }
         
         .product-card {
@@ -177,8 +176,7 @@
             from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        /* Only hide scrollbar on the settings panel now */
+
         #settingsItemsList::-webkit-scrollbar {
             display: none;
         }
@@ -506,4 +504,8 @@
             alert("Item saved!");
         }
 
-  
+        // FIXED: Direct call – no more window.onload needed
+        renderProductList();
+    </script>
+</body>
+</html>

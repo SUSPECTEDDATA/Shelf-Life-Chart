@@ -267,66 +267,74 @@
     </div>
 
     <script>
-        // === GROUPED SECTIONS (Wings under Chicken Sides) ===
+        // === HARD-CODED SECTIONS - LocalStorage Removed ===
         let sections = [
             { title: "Prepped Sauces", items: [
-                {name:"Hot Honey", days:35},{name:"Burger Sauce", days:14},{name:"Cheese Sauce", days:8},
-                {name:"Pizza Sauce", days:10},{name:"BBQ Sauce", days:10},{name:"Garlic Butter", days:10},
+                {name:"Hot Honey", days:35},
+                {name:"Burger Sauce", days:14},
+                {name:"Cheese Sauce", days:8},
+                {name:"Pizza Sauce", days:10},
+                {name:"BBQ Sauce", days:10},
+                {name:"Garlic Butter", days:10},
                 {name:"Pesto Drizzle", days:28}
             ]},
             { title: "Veg", items: [
-                {name:"Jalapenos", days:11},{name:"Pineapple", days:10},{name:"Sweetcorn", days:11},{name:"Gherkins", days:16},
+                {name:"Jalapenos", days:11},
+                {name:"Pineapple", days:10},
+                {name:"Sweetcorn", days:11},
+                {name:"Gherkins", days:16},
                 {name:"Picante Peppers", days:25}
             ]},
             { title: "Meats", items: [
-                {name:"Tuna", days:6},{name:"Chicken Strips", days:9},{name:"Tandoori", days:10},{name:"Meatballs", days:9},
-                {name:"Beef", days:9},{name:"Nduja", days:12},{name:"Chorizo", days:12},{name:"Pepperoni Frozen", days:12},{name:"Sausage", days:6}
+                {name:"Tuna", days:6},
+                {name:"Chicken Strips", days:9},
+                {name:"Tandoori", days:10},
+                {name:"Meatballs", days:9},
+                {name:"Beef", days:9},
+                {name:"Nduja", days:12},
+                {name:"Chorizo", days:12},
+                {name:"Pepperoni Frozen", days:12},
+                {name:"Sausage", days:6}
             ]},
             { title: "Chicken Sides", items: [
-                {name:"Strippers", days:10},{name:"Kickers", days:10},{name:"Boneless Bites", days:9},{name:"Tenders", days:9},{name:"Wings", days:9}
+                {name:"Strippers", days:10},
+                {name:"Kickers", days:10},
+                {name:"Boneless Bites", days:9},
+                {name:"Tenders", days:9},
+                {name:"Wings", days:9}
             ]},
             { title: "Sides", items: [
-                {name:"Wedges", days:7},{name:"Fries", days:7},{name:"Mac N Cheese", hours:48}
+                {name:"Wedges", days:7},
+                {name:"Fries", days:7},
+                {name:"Mac N Cheese", hours:48}
             ]},
             { title: "Cheese", items: [
-                {name:"Delight Cheese", days:9},{name:"PB Cheese", days:7},{name:"String Cheese", days:7},
+                {name:"Delight Cheese", days:9},
+                {name:"PB Cheese", days:7},
+                {name:"String Cheese", days:7},
                 {name:"Goats Cheese", days:14}
             ]},
             { title: "Bases", items: [
-                {name:"Thin Crust 7\"", days:21},{name:"Thin Crust 11.5\"", days:21},{name:"Thin Crust 13.5\"", days:21},{name:"Wrapz", days:22}
+                {name:"Thin Crust 7\"", days:21},
+                {name:"Thin Crust 11.5\"", days:21},
+                {name:"Thin Crust 13.5\"", days:21},
+                {name:"Wrapz", days:22}
             ]},
             { title: "Deserts", items: [
-                {name:"Cookies", days:17},{name:"Creme Egg Cookies", days:14}
+                {name:"Cookies", days:17},
+                {name:"Creme Egg Cookies", days:14}
             ]},
             { title: "Sauces Ambient", items: [
-                {name:"Cheese Sauce Ambient", hours:15},{name:"Pizza Sauce Ambient", hours:15},
-                {name:"BBQ Sauce Ambient", hours:15},{name:"Garlic Spread Ambient", hours:12}
+                {name:"Cheese Sauce Ambient", hours:15},
+                {name:"Pizza Sauce Ambient", hours:15},
+                {name:"BBQ Sauce Ambient", hours:15},
+                {name:"Garlic Spread Ambient", hours:12}
             ]}
         ];
 
         let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
         let selectedProduct = null;
         let editingIndex = -1;
-
-        if (localStorage.getItem("shelfLifeItems")) {
-            shelfLifeItems = JSON.parse(localStorage.getItem("shelfLifeItems"));
-        }
-
-        function saveItems() { localStorage.setItem("shelfLifeItems", JSON.stringify(shelfLifeItems)); }
-
-        function syncSectionsFromFlat() {
-            const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
-            sections.forEach(section => {
-                section.items = section.items.map(oldItem => itemMap.get(oldItem.name)).filter(Boolean);
-            });
-            const existingNames = new Set(sections.flatMap(s => s.items.map(i => i.name)));
-            const newItems = shelfLifeItems.filter(item => !existingNames.has(item.name));
-            if (newItems.length > 0) {
-                let custom = sections.find(s => s.title === "Custom Items");
-                if (!custom) { custom = { title: "Custom Items", items: [] }; sections.push(custom); }
-                custom.items.push(...newItems);
-            }
-        }
 
         function renderDaysCard(item) {
             const div = document.createElement("div");
@@ -403,7 +411,9 @@
             const newIndex = index + direction;
             if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
             [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
-            saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
+            syncSectionsFromFlat();
+            renderSettingsList(); 
+            renderProductList();
         }
 
         function renderSettingsList() {
@@ -435,9 +445,11 @@
         }
 
         function deleteItem(index) {
-            if (confirm("Delete this item permanently?")) {
+            if (confirm("Delete this item permanently? (Only until page refresh)")) {
                 shelfLifeItems.splice(index, 1);
-                saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
+                syncSectionsFromFlat();
+                renderSettingsList(); 
+                renderProductList();
             }
         }
 
@@ -449,5 +461,36 @@
             const newItem = { name };
             if (unit === "hours") newItem.hours = value; else newItem.days = value;
             if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
-            saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
- 
+            syncSectionsFromFlat();
+            renderSettingsList(); 
+            renderProductList();
+            editingIndex = -1;
+            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
+            document.getElementById("newName").value = "";
+            document.getElementById("newValue").value = "";
+            alert("Item saved! (Temporary - will reset on refresh)");
+        }
+
+        function syncSectionsFromFlat() {
+            const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
+            sections.forEach(section => {
+                section.items = section.items.map(oldItem => itemMap.get(oldItem.name)).filter(Boolean);
+            });
+        }
+
+        function showError(err) {
+            const debug = document.getElementById("errorDebug");
+            debug.textContent = "ERROR:\n" + err.message + "\n\n" + err.stack;
+            debug.style.display = "block";
+        }
+
+        // Initialize
+        try {
+            syncSectionsFromFlat();
+            renderProductList();
+        } catch (err) {
+            showError(err);
+        }
+    </script>
+</body>
+</html>

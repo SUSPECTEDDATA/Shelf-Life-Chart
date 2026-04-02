@@ -271,10 +271,12 @@
         let sections = [
             { title: "Prepped Sauces", items: [
                 {name:"Hot Honey", days:35},{name:"Burger Sauce", days:14},{name:"Cheese Sauce", days:8},
-                {name:"Pizza Sauce", days:10},{name:"BBQ Sauce", days:10},{name:"Garlic Butter", days:10}
+                {name:"Pizza Sauce", days:10},{name:"BBQ Sauce", days:10},{name:"Garlic Butter", days:10},
+                {name:"Pesto Drizzle", days:28}
             ]},
             { title: "Veg", items: [
-                {name:"Jalapenos", days:11},{name:"Pineapple", days:10},{name:"Sweetcorn", days:11},{name:"Gherkins", days:16}
+                {name:"Jalapenos", days:11},{name:"Pineapple", days:10},{name:"Sweetcorn", days:11},{name:"Gherkins", days:16},
+                {name:"Picante Peppers", days:25}
             ]},
             { title: "Meats", items: [
                 {name:"Tuna", days:6},{name:"Chicken Strips", days:9},{name:"Tandoori", days:10},{name:"Meatballs", days:9},
@@ -287,7 +289,8 @@
                 {name:"Wedges", days:7},{name:"Fries", days:7},{name:"Mac N Cheese", hours:48}
             ]},
             { title: "Cheese", items: [
-                {name:"Delight Cheese", days:9},{name:"PB Cheese", days:7},{name:"String Cheese", days:7}
+                {name:"Delight Cheese", days:9},{name:"PB Cheese", days:7},{name:"String Cheese", days:7},
+                {name:"Goats Cheese", days:14}
             ]},
             { title: "Bases", items: [
                 {name:"Thin Crust 7\"", days:21},{name:"Thin Crust 11.5\"", days:21},{name:"Thin Crust 13.5\"", days:21},{name:"Wrapz", days:22}
@@ -447,26 +450,4 @@
             if (unit === "hours") newItem.hours = value; else newItem.days = value;
             if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
             saveItems(); syncSectionsFromFlat(); renderSettingsList(); renderProductList();
-            editingIndex = -1;
-            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
-            document.getElementById("newName").value = "";
-            document.getElementById("newValue").value = "";
-            alert("Item saved!");
-        }
-
-        // === DEBUG WRAPPER ===
-        function showError(err) {
-            const debug = document.getElementById("errorDebug");
-            debug.textContent = "ERROR:\n" + err.message + "\n\n" + err.stack;
-            debug.style.display = "block";
-        }
-
-        try {
-            syncSectionsFromFlat();
-            renderProductList();
-        } catch (err) {
-            showError(err);
-        }
-    </script>
-</body>
-</html>
+ 

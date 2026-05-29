@@ -363,7 +363,8 @@
             ]},
             { title: "Deserts", items: [
                 {name:"Cookies", days:17},
-                {name:"Creme Egg Cookies", days:14}
+                {name:"Creme Egg Cookies", days:14},
+                {name:"Chocolate Caramel Cookies", days:14}
             ]},
             { title: "Sauces Ambient", items: [
                 {name:"Cheese Sauce Ambient", hours:15},
@@ -379,6 +380,8 @@
         let broughtOutOverride = null; // null = use current time, else hour (0-23)
 
         function getDisplayName(name) {
+            if (name === "Picante Peppers") return "Picante";
+            if (name === "Chocolate Caramel Cookies") return "C. Cookies";
             return name.replace(/ Ambient$/, '');
         }
 

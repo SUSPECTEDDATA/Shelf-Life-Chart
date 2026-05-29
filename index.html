@@ -233,7 +233,7 @@
 <body>
     <div class="main" style="position: relative;">
         <!-- Title -->
-        <div style="margin-bottom:8px; text-align:center; border-bottom:1px solid #eee; padding-bottom:8px;">
+        <div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:8px; text-align:center;">
             <h1 style="font-size:28px; font-weight:700;">Shelf Life Chart</h1>
         </div>
 
@@ -376,7 +376,7 @@
         let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
         let selectedProduct = null;
         let editingIndex = -1;
-        let currentCalendarDate = new Date();
+        let broughtOutOverride = null; // null = use current time, else hour (0-23)
 
         function getDisplayName(name) {
             return name.replace(/ Ambient$/, '');
@@ -434,7 +434,30 @@
                 const header = document.createElement("h2");
                 header.className = "section-header";
                 header.id = sectionId;
-                header.textContent = section.title;
+                header.style.display = "flex";
+                header.style.alignItems = "center";
+                header.style.justifyContent = "space-between";
+
+                const titleSpan = document.createElement("span");
+                titleSpan.textContent = section.title;
+                header.appendChild(titleSpan);
+
+                if (section.title === "Sauces Ambient") {
+                    const toggle = document.createElement("select");
+                    toggle.id = "timeToggle";
+                    toggle.style.cssText = "font-size:13px; padding:6px 12px; border:2px solid #228B22; border-radius:9999px; background:white; cursor:pointer; color:#228B22; font-weight:600; min-width:70px; text-align:center;";
+                    toggle.innerHTML = `
+                        <option value="23">11pm</option>
+                        <option value="1">1am</option>
+                        <option value="2">2am</option>
+                        <option value="3" selected>3am</option>
+                        <option value="4">4am</option>
+                        <option value="5">5am</option>
+                    `;
+                    toggle.onchange = updateBroughtOutTime;
+                    header.appendChild(toggle);
+                }
+
                 container.appendChild(header);
 
                 const grid = document.createElement("div");
@@ -458,9 +481,31 @@
             return new Date(now.getTime() + product.hours * 60 * 60 * 1000);
         }
 
+        function updateBroughtOutTime() {
+            const select = document.getElementById("timeToggle");
+            broughtOutOverride = select.value ? parseInt(select.value) : null;
+            if (broughtOutOverride !== null) {
+                localStorage.setItem("closeTime", broughtOutOverride.toString());
+            }
+            if (selectedProduct && selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
+                calculateExpiry();
+            }
+        }
+
         function calculateExpiry() {
             if (!selectedProduct) return;
-            const expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
+            let expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
+
+            // Cap expiry for ambient sauces if override is set
+            if (selectedProduct.hours && selectedProduct.name.includes("Ambient") && broughtOutOverride !== null) {
+                const capHour = broughtOutOverride;
+                const capDate = new Date(expiryDate);
+                capDate.setHours(capHour, 0, 0, 0);
+                if (expiryDate > capDate) {
+                    expiryDate = capDate;
+                }
+            }
+
             const formatUKDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
             const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
             const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -714,8 +759,18 @@
         }
 
         try {
+            // Load saved close time from localStorage or default to 3am
+            const savedCloseTime = localStorage.getItem("closeTime");
+            broughtOutOverride = savedCloseTime ? parseInt(savedCloseTime) : 3;
+
             syncSectionsFromFlat();
             renderProductList();
+
+            // Set the select value after rendering
+            const timeSelect = document.getElementById("timeToggle");
+            if (timeSelect) {
+                timeSelect.value = broughtOutOverride.toString();
+            }
         } catch (err) {
             showError(err);
         }

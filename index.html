@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Shelf Life Chart • Project 2</title>
+    <title>Shelf Life Chart</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
@@ -25,44 +25,11 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        .app-bar {
-            background: var(--md-primary);
-            color: white;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        
-        .app-bar h1 {
-            font-size: 24px;
-            font-weight: 600;
-        }
-        
-        .gear {
-            font-size: 28px;
-            cursor: pointer;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: background 0.2s;
-        }
-        
-        .gear:active {
-            background: rgba(255,255,255,0.2);
-        }
-        
         .main {
             padding: 24px 16px 40px;
             max-width: 480px;
             margin: 0 auto;
+            position: relative;
         }
         
         .section-header {
@@ -140,6 +107,7 @@
             width: 100%;
             max-width: 280px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            cursor: pointer;
         }
         
         .expiry-product {
@@ -197,28 +165,101 @@
             font-size: 14px;
             display: none;
         }
+
+        .calendar {
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .calendar-header button {
+            background: #f0f0f0;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+        .calendar-day {
+            padding: 8px 0;
+            font-size: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .calendar-day:hover {
+            background: #e8f4e8;
+        }
+        .calendar-day.selected {
+            background: #228B22;
+            color: white;
+            font-weight: 700;
+        }
+        .calendar-day.other-month {
+            color: #aaa;
+        }
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 6px;
+        }
+
+        /* Hide scrollbar for quick nav */
+        #quickNav::-webkit-scrollbar {
+            display: none;
+        }
+        #quickNav {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
     </style>
 </head>
 <body>
-    <div class="app-bar">
-        <h1>Shelf Life Chart</h1>
-        <div class="app-bar-actions">
-            <span onclick="toggleSettings()" class="gear">⚙️</span>
+    <div class="main" style="position: relative;">
+        <!-- Title -->
+        <div style="margin-bottom:8px; text-align:center; border-bottom:1px solid #eee; padding-bottom:8px;">
+            <h1 style="font-size:28px; font-weight:700;">Shelf Life Chart</h1>
         </div>
-    </div>
 
-    <div class="main">
+        <!-- Quick nav buttons -->
+        <div id="quickNav" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; padding:8px 0; border-bottom:1px solid #ddd;">
+            <!-- Populated by JS -->
+        </div>
         <div id="productSections"></div>
         <div id="errorDebug"></div>
 
         <div class="result" id="resultPanel">
             <h3>Your Expiry Date</h3>
-            <div class="expiry-card" id="previewLabel">
+            <div class="expiry-card" id="previewLabel" onclick="copyExpiryLabel()">
                 <div class="expiry-product" id="previewProduct"></div>
                 <div class="expiry-weekday" id="previewWeekday"></div>
                 <div class="expiry-datetime" id="previewDate"></div>
             </div>
-            <p style="margin-top:24px; font-size:14px; color:#666;">Calculated using today’s exact time</p>
+            <div id="overrideSection" style="margin-top:20px; display:none;">
+                <div style="background:white; border:3px solid #222; border-radius:24px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                    <div onclick="toggleCalendar()" style="text-align:center; cursor:pointer; margin-bottom:12px; position:relative; padding-right:30px;">
+                        <div style="font-size:18px; font-weight:600; color:#222;">Override expiry date</div>
+                        <div id="calendarArrow" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:28px; transition: transform 0.2s;">▼</div>
+                    </div>
+                    <div id="calendarContainer" style="margin:0 auto; max-width:280px; display:none;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -267,7 +308,7 @@
     </div>
 
     <script>
-        // === HARD-CODED SECTIONS - LocalStorage Removed ===
+        // === HARD-CODED SECTIONS - No LocalStorage (changes reset on refresh) ===
         let sections = [
             { title: "Prepped Sauces", items: [
                 {name:"Hot Honey", days:35},
@@ -299,8 +340,8 @@
             { title: "Chicken Sides", items: [
                 {name:"Strippers", days:10},
                 {name:"Kickers", days:10},
-                {name:"Boneless Bites", days:9},
-                {name:"Tenders", days:9},
+                {name:"Boneless Bites", days:10},
+                {name:"Tenders", days:10},
                 {name:"Wings", days:9}
             ]},
             { title: "Sides", items: [
@@ -335,6 +376,11 @@
         let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
         let selectedProduct = null;
         let editingIndex = -1;
+        let currentCalendarDate = new Date();
+
+        function getDisplayName(name) {
+            return name.replace(/ Ambient$/, '');
+        }
 
         function renderDaysCard(item) {
             const div = document.createElement("div");
@@ -359,11 +405,40 @@
         function renderProductList() {
             const container = document.getElementById("productSections");
             container.innerHTML = "";
+            const nav = document.getElementById("quickNav");
+            nav.innerHTML = "";
+
+            // All quick shortcuts in one scrollable row
+            const navRow = document.createElement("div");
+            navRow.style.cssText = "display:flex; gap:8px; flex-wrap:nowrap; margin-bottom:8px; overflow-x:auto; padding-bottom:4px;";
+            
             sections.forEach(section => {
                 if (section.items.length === 0) return;
-                const header = document.createElement("h2"); header.className = "section-header"; header.textContent = section.title;
+                const btn = document.createElement("button");
+                btn.textContent = section.title;
+                btn.style.cssText = "background:#228B22; color:white; border:none; padding:8px 16px; border-radius:9999px; font-size:13px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
+                const sectionId = "section-" + section.title.replace(/\s+/g, "-");
+                btn.onclick = () => {
+                    const target = document.getElementById(sectionId);
+                    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+                };
+                navRow.appendChild(btn);
+            });
+            
+            nav.appendChild(navRow);
+
+            // Render all sections with IDs
+            sections.forEach(section => {
+                if (section.items.length === 0) return;
+                const sectionId = "section-" + section.title.replace(/\s+/g, "-");
+                const header = document.createElement("h2");
+                header.className = "section-header";
+                header.id = sectionId;
+                header.textContent = section.title;
                 container.appendChild(header);
-                const grid = document.createElement("div"); grid.className = "product-grid";
+
+                const grid = document.createElement("div");
+                grid.className = "product-grid";
                 section.items.forEach(item => {
                     grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
                 });
@@ -390,107 +465,22 @@
             const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
             const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-            document.getElementById("previewProduct").textContent = selectedProduct.name;
+            document.getElementById("previewProduct").textContent = getDisplayName(selectedProduct.name);
             document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
-            if (selectedProduct.hours) {
-                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + ' <span style="font-size:28px;">' + formatTime(expiryDate) + '</span>';
+            if (selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
+                const broughtOut = formatTime(new Date());
+                const expiryTime = formatTime(expiryDate);
+                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + broughtOut + '-' + expiryTime;
+            } else if (selectedProduct.hours) {
+                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + formatTime(expiryDate);
             } else {
                 document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate);
             }
             document.getElementById("resultPanel").classList.add("show");
             setTimeout(() => document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" }), 100);
-        }
 
-        function toggleSettings() {
-            const panel = document.getElementById("settingsPanel");
-            panel.style.display = panel.style.display === "flex" ? "none" : "flex";
-            if (panel.style.display === "flex") renderSettingsList();
-        }
-
-        function moveItem(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
-            [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
-            syncSectionsFromFlat();
-            renderSettingsList(); 
-            renderProductList();
-        }
-
-        function renderSettingsList() {
-            const tbody = document.getElementById("settingsItemsList");
-            tbody.innerHTML = "";
-            shelfLifeItems.forEach((item, i) => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `<td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee;">${item.name}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.days || ''}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.hours || ''}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">
-                        <button onclick="moveItem(${i}, -1)" class="mobile-action-btn" style="background:#555;color:white;">↑</button>
-                        <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
-                        <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#08f;color:white;">Edit</button>
-                        <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c00;color:white;">Delete</button>
-                    </td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function editItem(index) {
-            editingIndex = index;
-            const item = shelfLifeItems[index];
-            document.getElementById("settingsFormTitle").textContent = "Edit Item";
-            document.getElementById("newName").value = item.name;
-            document.getElementById("newValue").value = item.hours || item.days || "";
-            document.getElementById("newUnit").value = item.hours ? "hours" : "days";
-        }
-
-        function deleteItem(index) {
-            if (confirm("Delete this item permanently? (Only until page refresh)")) {
-                shelfLifeItems.splice(index, 1);
-                syncSectionsFromFlat();
-                renderSettingsList(); 
-                renderProductList();
-            }
-        }
-
-        function addOrUpdateItem() {
-            const name = document.getElementById("newName").value.trim();
-            const value = parseInt(document.getElementById("newValue").value) || 0;
-            const unit = document.getElementById("newUnit").value;
-            if (!name) return alert("Please enter a product name");
-            const newItem = { name };
-            if (unit === "hours") newItem.hours = value; else newItem.days = value;
-            if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
-            syncSectionsFromFlat();
-            renderSettingsList(); 
-            renderProductList();
-            editingIndex = -1;
-            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
-            document.getElementById("newName").value = "";
-            document.getElementById("newValue").value = "";
-            alert("Item saved! (Temporary - will reset on refresh)");
-        }
-
-        function syncSectionsFromFlat() {
-            const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
-            sections.forEach(section => {
-                section.items = section.items.map(oldItem => itemMap.get(oldItem.name)).filter(Boolean);
-            });
-        }
-
-        function showError(err) {
-            const debug = document.getElementById("errorDebug");
-            debug.textContent = "ERROR:\n" + err.message + "\n\n" + err.stack;
-            debug.style.display = "block";
-        }
-
-        // Initialize
-        try {
-            syncSectionsFromFlat();
-            renderProductList();
-        } catch (err) {
-            showError(err);
-        }
-    </script>
-</body>
-</html>
+            const overrideSection = document.getElementById("overrideSection");
+            if (!selectedProduct.hours) {
+                overrideSection.style.display = "block";
+                document.getElementById("calendarContainer").style.display = "none";
+                document.getElementById("calendarArrow").textCont

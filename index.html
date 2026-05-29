@@ -483,4 +483,242 @@
             if (!selectedProduct.hours) {
                 overrideSection.style.display = "block";
                 document.getElementById("calendarContainer").style.display = "none";
-                document.getElementById("calendarArrow").textCont
+                document.getElementById("calendarArrow").textContent = "▼";
+                currentCalendarDate = new Date(expiryDate);
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), expiryDate);
+            } else {
+                overrideSection.style.display = "none";
+            }
+        }
+
+        function renderCalendar(year, month, selectedDate) {
+            const container = document.getElementById("calendarContainer");
+            container.innerHTML = "";
+
+            const header = document.createElement("div");
+            header.className = "calendar-header";
+            header.innerHTML = `
+                <button onclick="prevMonth()">←</button>
+                <span>${new Date(year, month).toLocaleString('default', { month: 'long' })} ${year}</span>
+                <button onclick="nextMonth()">→</button>
+            `;
+            container.appendChild(header);
+
+            const weekdays = document.createElement("div");
+            weekdays.className = "calendar-weekdays";
+            ['M','T','W','T','F','S','S'].forEach(d => {
+                const el = document.createElement("div"); el.textContent = d; weekdays.appendChild(el);
+            });
+            container.appendChild(weekdays);
+
+            const grid = document.createElement("div");
+            grid.className = "calendar-grid";
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const startDay = (firstDay === 0) ? 6 : firstDay - 1;
+
+            const prevMonthDays = new Date(year, month, 0).getDate();
+            for (let i = startDay - 1; i >= 0; i--) {
+                const dayEl = document.createElement("div");
+                dayEl.className = "calendar-day other-month";
+                dayEl.textContent = prevMonthDays - i;
+                grid.appendChild(dayEl);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement("div");
+                dayEl.className = "calendar-day";
+                dayEl.textContent = day;
+                const thisDate = new Date(year, month, day);
+
+                if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) {
+                    dayEl.classList.add("selected");
+                }
+
+                dayEl.onclick = () => {
+                    document.getElementById("previewDate").innerHTML = thisDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                    document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${thisDate.toLocaleDateString('en-GB', { weekday: 'long' })}</span>`;
+                    renderCalendar(year, month, thisDate);
+                };
+                grid.appendChild(dayEl);
+            }
+
+            const remaining = 42 - (startDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                const dayEl = document.createElement("div");
+                dayEl.className = "calendar-day other-month";
+                dayEl.textContent = i;
+                grid.appendChild(dayEl);
+            }
+
+            container.appendChild(grid);
+        }
+
+        function prevMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            const currentPreview = document.getElementById("previewDate").innerHTML;
+            let selected = null;
+            if (currentPreview) {
+                const [d, m, y] = currentPreview.split('/').map(Number);
+                selected = new Date(2000 + y, m - 1, d);
+            }
+            renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), selected);
+        }
+
+        function nextMonth() {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            const currentPreview = document.getElementById("previewDate").innerHTML;
+            let selected = null;
+            if (currentPreview) {
+                const [d, m, y] = currentPreview.split('/').map(Number);
+                selected = new Date(2000 + y, m - 1, d);
+            }
+            renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), selected);
+        }
+
+        function toggleCalendar() {
+            const container = document.getElementById("calendarContainer");
+            const arrow = document.getElementById("calendarArrow");
+            if (container.style.display === "none" || container.style.display === "") {
+                container.style.display = "block";
+                arrow.textContent = "▲";
+            } else {
+                container.style.display = "none";
+                arrow.textContent = "▼";
+                setTimeout(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                }, 250);
+            }
+        }
+
+        function copyExpiryLabel() {
+            const product = document.getElementById("previewProduct").textContent;
+            const weekday = document.getElementById("previewWeekday").textContent.replace(/<[^>]*>/g, '');
+            const dateEl = document.getElementById("previewDate");
+            const html = dateEl.innerHTML;
+            let textToCopy;
+            if (html.includes('<br>')) {
+                const parts = html.split('<br>');
+                const datePart = parts[0];
+                const timePart = parts[1] || '';
+                textToCopy = product + "\n" + weekday + "\n" + datePart + "\n" + timePart;
+            } else {
+                textToCopy = product + "\n" + weekday + "\n" + dateEl.textContent;
+            }
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const label = document.getElementById("previewLabel");
+                const originalBorder = label.style.border;
+                label.style.border = "3px solid #228B22";
+                setTimeout(() => {
+                    label.style.border = originalBorder || "3px solid #222";
+                }, 600);
+            }).catch(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+            });
+        }
+
+        function toggleSettings() {
+            const panel = document.getElementById("settingsPanel");
+            panel.style.display = panel.style.display === "flex" ? "none" : "flex";
+            if (panel.style.display === "flex") renderSettingsList();
+        }
+
+        function moveItem(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= shelfLifeItems.length) return;
+            [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
+            syncSectionsFromFlat();
+            renderSettingsList(); 
+            renderProductList();
+        }
+
+        function renderSettingsList() {
+            const tbody = document.getElementById("settingsItemsList");
+            tbody.innerHTML = "";
+            shelfLifeItems.forEach((item, i) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `<td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee;">${item.name}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.days || ''}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.hours || ''}</td>
+                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">
+                        <button onclick="moveItem(${i}, -1)" class="mobile-action-btn" style="background:#555;color:white;">↑</button>
+                        <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
+                        <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#08f;color:white;">Edit</button>
+                        <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c00;color:white;">Delete</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editItem(index) {
+            editingIndex = index;
+            const item = shelfLifeItems[index];
+            document.getElementById("settingsFormTitle").textContent = "Edit Item";
+            document.getElementById("newName").value = item.name;
+            document.getElementById("newValue").value = item.hours || item.days || "";
+            document.getElementById("newUnit").value = item.hours ? "hours" : "days";
+        }
+
+        function deleteItem(index) {
+            if (confirm("Delete this item permanently? (Only until page refresh)")) {
+                shelfLifeItems.splice(index, 1);
+                syncSectionsFromFlat();
+                renderSettingsList(); 
+                renderProductList();
+            }
+        }
+
+        function addOrUpdateItem() {
+            const name = document.getElementById("newName").value.trim();
+            const value = parseInt(document.getElementById("newValue").value) || 0;
+            const unit = document.getElementById("newUnit").value;
+            if (!name) return alert("Please enter a product name");
+            const newItem = { name };
+            if (unit === "hours") newItem.hours = value; else newItem.days = value;
+            if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
+            syncSectionsFromFlat();
+            renderSettingsList(); 
+            renderProductList();
+            editingIndex = -1;
+            document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
+            document.getElementById("newName").value = "";
+            document.getElementById("newValue").value = "";
+            alert("Item saved! (Temporary - will reset on refresh)");
+        }
+
+        function syncSectionsFromFlat() {
+            const itemMap = new Map(shelfLifeItems.map(item => [item.name, item]));
+            sections.forEach(section => {
+                section.items = section.items.map(oldItem => itemMap.get(oldItem.name)).filter(Boolean);
+            });
+            const existingNames = new Set(sections.flatMap(s => s.items.map(i => i.name)));
+            const newItems = shelfLifeItems.filter(item => !existingNames.has(item.name));
+            if (newItems.length > 0) {
+                let custom = sections.find(s => s.title === "Custom Items");
+                if (!custom) { custom = { title: "Custom Items", items: [] }; sections.push(custom); }
+                custom.items.push(...newItems);
+            }
+        }
+
+        function showError(err) {
+            const debug = document.getElementById("errorDebug");
+            debug.textContent = "ERROR:\n" + err.message + "\n\n" + err.stack;
+            debug.style.display = "block";
+        }
+
+        try {
+            syncSectionsFromFlat();
+            renderProductList();
+        } catch (err) {
+            showError(err);
+        }
+    </script>
+</body>
+</html>

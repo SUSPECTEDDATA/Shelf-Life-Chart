@@ -509,8 +509,12 @@
             // Cap expiry for ambient sauces if override is set
             if (selectedProduct.hours && selectedProduct.name.includes("Ambient") && broughtOutOverride !== null) {
                 const capHour = broughtOutOverride;
-                const capDate = new Date(expiryDate);
+                const nowForCap = new Date();
+                let capDate = new Date(nowForCap);
                 capDate.setHours(capHour, 0, 0, 0);
+                if (capDate.getTime() <= nowForCap.getTime()) {
+                    capDate.setDate(capDate.getDate() + 1);
+                }
                 if (expiryDate > capDate) {
                     expiryDate = capDate;
                 }

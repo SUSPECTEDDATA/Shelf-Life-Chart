@@ -232,13 +232,8 @@
 </head>
 <body>
     <div class="main" style="position: relative;">
-        <!-- Title -->
-        <div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:8px; text-align:center;">
-            <h1 style="font-size:28px; font-weight:700;">Shelf Life Chart</h1>
-        </div>
-
-        <!-- Quick nav buttons -->
-        <div id="quickNav" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; padding:8px 0; border-bottom:1px solid #ddd;">
+        <!-- Quick nav buttons (priority + collapsible) -->
+        <div id="quickNav" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; padding:8px 0; border-bottom:1px solid #ddd; position: sticky; top: 0; z-index: 100; background: #f0f0f0;">
             <!-- Populated by JS -->
         </div>
         <div id="productSections"></div>
@@ -308,7 +303,7 @@
     </div>
 
     <script>
-        // === HARD-CODED SECTIONS - No LocalStorage (changes reset on refresh) ===
+        // === HARD-CODED SECTIONS ===
         let sections = [
             { title: "Prepped Sauces", items: [
                 {name:"Hot Honey", days:35},
@@ -366,6 +361,29 @@
                 {name:"Creme Egg Cookies", days:14},
                 {name:"Chocolate Caramel Cookies", days:14}
             ]},
+            { title: "Dips", items: [
+                {name: "Garlic 25g", manualDate: true},
+                {name: "Garlic 40g", manualDate: true},
+                {name: "Garlic 100g", manualDate: true},
+                {name: "Franks 25g", manualDate: true},
+                {name: "Franks 100g", manualDate: true},
+                {name: "H&M 25g", manualDate: true},
+                {name: "BBQ 25g", manualDate: true},
+                {name: "BBQ 40g", manualDate: true},
+                {name: "BBQ 100g", manualDate: true},
+                {name: "PB 25g", manualDate: true},
+                {name: "Mexicana 40g", manualDate: true},
+                {name: "Honey 40g", manualDate: true},
+                {name: "Aioli 40g", manualDate: true},
+                {name: "Curry 40g", manualDate: true},
+                {name: "Teriyaki 40g", manualDate: true},
+                {name: "Buffalo 40g", manualDate: true},
+                {name: "Chilli 40g", manualDate: true}
+            ]},
+            { title: "Mix Trays", items: [
+                {name: "Mix Tray 9 & 13", special: "9 & 13"},
+                {name: "Mix Tray 6 & 11", special: "6 & 11"}
+            ]},
             { title: "Sauces Ambient", items: [
                 {name:"Cheese Sauce Ambient", hours:15},
                 {name:"Pizza Sauce Ambient", hours:15},
@@ -377,7 +395,18 @@
         let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
         let selectedProduct = null;
         let editingIndex = -1;
-        let broughtOutOverride = null; // null = use current time, else hour (0-23)
+        let broughtOutOverride = null;
+        let quickNavExpanded = false;
+
+        function scrollToSection(sectionId) {
+            const target = document.getElementById(sectionId);
+            if (!target) return;
+            const nav = document.getElementById("quickNav");
+            const navHeight = nav ? nav.offsetHeight : 80;
+            const yOffset = -(navHeight + 12);
+            const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            window.scrollTo({ top: y, behavior: 'smooth' });
+        }
 
         function getDisplayName(name) {
             if (name === "Picante Peppers") return "Picante";
@@ -389,6 +418,7 @@
             if (name === "String Cheese") return "String";
             if (name === "Goats Cheese") return "G. Cheese";
             if (name === "Boneless Bites") return "B. Bites";
+            if (name.includes("Mix Tray")) return "Mix Tray";
             return name.replace(/ Ambient$/, '');
         }
 
@@ -396,7 +426,8 @@
             const div = document.createElement("div");
             div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
             const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
-            const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = item.days + " days";
+            const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; 
+            shelfEl.textContent = item.special ? "Today" : (item.days + " days");
             div.appendChild(nameEl); div.appendChild(shelfEl);
             div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
             return div;
@@ -418,26 +449,53 @@
             const nav = document.getElementById("quickNav");
             nav.innerHTML = "";
 
-            // All quick shortcuts in one scrollable row
-            const navRow = document.createElement("div");
-            navRow.style.cssText = "display:flex; gap:8px; flex-wrap:nowrap; margin-bottom:8px; overflow-x:auto; padding-bottom:4px;";
-            
+            const priorityTitles = ["Prepped Sauces", "Veg", "Sauces Ambient"];
+
+            // Priority buttons row + toggle
+            const priorityRow = document.createElement("div");
+            priorityRow.style.cssText = "display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;";
+
             sections.forEach(section => {
                 if (section.items.length === 0) return;
+                if (!priorityTitles.includes(section.title)) return;
+
+                const btn = document.createElement("button");
+                const displayTitle = section.title === "Prepped Sauces" ? "Sauces" : section.title;
+                btn.textContent = displayTitle;
+                btn.style.cssText = "background:#228B22; color:white; border:none; padding:10px 14px; border-radius:9999px; font-size:13px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
+                const sectionId = "section-" + section.title.replace(/\s+/g, "-");
+                btn.onclick = () => scrollToSection(sectionId);
+                priorityRow.appendChild(btn);
+            });
+
+            const toggleBtn = document.createElement("button");
+            toggleBtn.style.cssText = "background:#555; color:white; border:none; padding:8px 12px; border-radius:9999px; font-size:12px; cursor:pointer; margin-left:auto; flex-shrink:0;";
+            toggleBtn.textContent = quickNavExpanded ? "▲ Less" : "▼ More";
+            toggleBtn.onclick = () => {
+                quickNavExpanded = !quickNavExpanded;
+                renderProductList();
+            };
+            priorityRow.appendChild(toggleBtn);
+
+            nav.appendChild(priorityRow);
+
+            const otherRow = document.createElement("div");
+            otherRow.style.cssText = `display:${quickNavExpanded ? 'flex' : 'none'}; gap:8px; flex-wrap:wrap;`;
+
+            sections.forEach(section => {
+                if (section.items.length === 0) return;
+                if (priorityTitles.includes(section.title)) return;
+
                 const btn = document.createElement("button");
                 btn.textContent = section.title;
-                btn.style.cssText = "background:#228B22; color:white; border:none; padding:8px 16px; border-radius:9999px; font-size:13px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
+                btn.style.cssText = "background:#228B22; color:white; border:none; padding:8px 12px; border-radius:9999px; font-size:12px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
                 const sectionId = "section-" + section.title.replace(/\s+/g, "-");
-                btn.onclick = () => {
-                    const target = document.getElementById(sectionId);
-                    if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-                };
-                navRow.appendChild(btn);
+                btn.onclick = () => scrollToSection(sectionId);
+                otherRow.appendChild(btn);
             });
-            
-            nav.appendChild(navRow);
 
-            // Render all sections with IDs
+            nav.appendChild(otherRow);
+
             sections.forEach(section => {
                 if (section.items.length === 0) return;
                 const sectionId = "section-" + section.title.replace(/\s+/g, "-");
@@ -460,10 +518,11 @@
                         <option value="23">11pm</option>
                         <option value="1">1am</option>
                         <option value="2">2am</option>
-                        <option value="3" selected>3am</option>
+                        <option value="3">3am</option>
                         <option value="4">4am</option>
                         <option value="5">5am</option>
                     `;
+                    toggle.value = broughtOutOverride ? broughtOutOverride.toString() : "3";
                     toggle.onchange = updateBroughtOutTime;
                     header.appendChild(toggle);
                 }
@@ -473,7 +532,25 @@
                 const grid = document.createElement("div");
                 grid.className = "product-grid";
                 section.items.forEach(item => {
-                    grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
+                    if (item.special) {
+                        const div = document.createElement("div");
+                        div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
+                        const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
+                        const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = "Today";
+                        div.appendChild(nameEl); div.appendChild(shelfEl);
+                        div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+                        grid.appendChild(div);
+                    } else if (item.manualDate) {
+                        const div = document.createElement("div");
+                        div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
+                        const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
+                        const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = "Select date";
+                        div.appendChild(nameEl); div.appendChild(shelfEl);
+                        div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+                        grid.appendChild(div);
+                    } else {
+                        grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
+                    }
                 });
                 container.appendChild(grid);
             });
@@ -506,7 +583,15 @@
             if (!selectedProduct) return;
             let expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
 
-            // Cap expiry for ambient sauces if override is set
+            const isMixTray = !!selectedProduct.special;
+            if (isMixTray) {
+                expiryDate = new Date();
+            }
+
+            if (selectedProduct.manualDate) {
+                expiryDate = new Date();
+            }
+
             if (selectedProduct.hours && selectedProduct.name.includes("Ambient") && broughtOutOverride !== null) {
                 const capHour = broughtOutOverride;
                 const nowForCap = new Date();
@@ -524,25 +609,40 @@
             const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
             const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
+            const isMixTray2 = !!selectedProduct.special;
+            const isManualDate = !!selectedProduct.manualDate;
+
             document.getElementById("previewProduct").textContent = getDisplayName(selectedProduct.name);
-            document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
-            if (selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
-                const broughtOut = formatTime(new Date());
-                const expiryTime = formatTime(expiryDate);
-                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + broughtOut + '-' + expiryTime;
-            } else if (selectedProduct.hours) {
-                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + formatTime(expiryDate);
+
+            if (isMixTray2) {
+                document.getElementById("previewWeekday").innerHTML = "";
+                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + selectedProduct.special;
             } else {
-                document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate);
+                document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
+                if (selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
+                    const broughtOut = formatTime(new Date());
+                    const expiryTime = formatTime(expiryDate);
+                    document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + broughtOut + '-' + expiryTime;
+                } else if (selectedProduct.hours) {
+                    document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + formatTime(expiryDate);
+                } else {
+                    document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate);
+                }
             }
             document.getElementById("resultPanel").classList.add("show");
             setTimeout(() => document.getElementById("resultPanel").scrollIntoView({ behavior: "smooth" }), 100);
 
             const overrideSection = document.getElementById("overrideSection");
-            if (!selectedProduct.hours) {
+            const isMixTray3 = !!selectedProduct.special;
+            if (!selectedProduct.hours && !isMixTray3) {
                 overrideSection.style.display = "block";
-                document.getElementById("calendarContainer").style.display = "none";
-                document.getElementById("calendarArrow").textContent = "▼";
+                if (isManualDate) {
+                    document.getElementById("calendarContainer").style.display = "block";
+                    document.getElementById("calendarArrow").textContent = "▲";
+                } else {
+                    document.getElementById("calendarContainer").style.display = "none";
+                    document.getElementById("calendarArrow").textContent = "▼";
+                }
                 currentCalendarDate = new Date(expiryDate);
                 renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), expiryDate);
             } else {
@@ -659,11 +759,15 @@
             let textToCopy;
             if (html.includes('<br>')) {
                 const parts = html.split('<br>');
-                const datePart = parts[0];
-                const timePart = parts[1] || '';
-                textToCopy = product + "\n" + weekday + "\n" + datePart + "\n" + timePart;
+                const datePart = parts[0].replace(/&amp;/g, '&');
+                const timePart = (parts[1] || '').replace(/&amp;/g, '&');
+                if (weekday.trim() === "") {
+                    textToCopy = product + "\n" + datePart + "\n" + timePart;
+                } else {
+                    textToCopy = product + "\n" + weekday + "\n" + datePart + "\n" + timePart;
+                }
             } else {
-                textToCopy = product + "\n" + weekday + "\n" + dateEl.textContent;
+                textToCopy = product + "\n" + weekday + "\n" + dateEl.textContent.replace(/&amp;/g, '&');
             }
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const label = document.getElementById("previewLabel");
@@ -773,18 +877,11 @@
         }
 
         try {
-            // Load saved close time from localStorage or default to 3am
             const savedCloseTime = localStorage.getItem("closeTime");
             broughtOutOverride = savedCloseTime ? parseInt(savedCloseTime) : 3;
 
             syncSectionsFromFlat();
             renderProductList();
-
-            // Set the select value after rendering
-            const timeSelect = document.getElementById("timeToggle");
-            if (timeSelect) {
-                timeSelect.value = broughtOutOverride.toString();
-            }
         } catch (err) {
             showError(err);
         }

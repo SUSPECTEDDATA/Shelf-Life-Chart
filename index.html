@@ -912,12 +912,55 @@
             debug.style.display = "block";
         }
 
+        // === Swipe support for calendar ===
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function setupCalendarSwipe() {
+            const cal = document.getElementById("calendarContainer");
+            if (!cal) return;
+
+            cal.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, { passive: true });
+
+            cal.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleCalendarSwipe();
+            }, { passive: true });
+        }
+
+        function handleCalendarSwipe() {
+            const threshold = 55;
+            const diff = touchEndX - touchStartX;
+
+            if (Math.abs(diff) < threshold) return;
+
+            if (diff > 0) {
+                // Swiped right → previous month
+                prevMonth();
+            } else {
+                // Swiped left → next month
+                nextMonth();
+            }
+        }
+
         try {
+            // Load saved close time from localStorage or default to 3am
             const savedCloseTime = localStorage.getItem("closeTime");
             broughtOutOverride = savedCloseTime ? parseInt(savedCloseTime) : 3;
 
             syncSectionsFromFlat();
             renderProductList();
+
+            // Set the select value after rendering
+            const timeSelect = document.getElementById("timeToggle");
+            if (timeSelect) {
+                timeSelect.value = broughtOutOverride.toString();
+            }
+
+            // Enable swipe on calendar
+            setTimeout(setupCalendarSwipe, 600);
         } catch (err) {
             showError(err);
         }

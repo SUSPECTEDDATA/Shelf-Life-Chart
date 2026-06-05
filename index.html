@@ -462,7 +462,12 @@
             const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; 
             shelfEl.textContent = item.special ? "Today" : (item.days + " days");
             div.appendChild(nameEl); div.appendChild(shelfEl);
-            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+            div.onclick = () => { 
+                triggerHaptic();
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
@@ -472,7 +477,12 @@
             const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
             const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = item.hours + " hours";
             div.appendChild(nameEl); div.appendChild(shelfEl);
-            div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+            div.onclick = () => { 
+                triggerHaptic();
+                selectedProduct = item; 
+                renderProductList(); 
+                calculateExpiry(); 
+            };
             return div;
         }
 
@@ -570,7 +580,12 @@
                         const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
                         const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = "Today";
                         div.appendChild(nameEl); div.appendChild(shelfEl);
-                        div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+                        div.onclick = () => { 
+                            triggerHaptic();
+                            selectedProduct = item; 
+                            renderProductList(); 
+                            calculateExpiry(); 
+                        };
                         grid.appendChild(div);
                     } else if (item.manualDate) {
                         const div = document.createElement("div");
@@ -578,7 +593,12 @@
                         const nameEl = document.createElement("div"); nameEl.className = "product-name"; nameEl.textContent = item.name;
                         const shelfEl = document.createElement("div"); shelfEl.className = "shelf-life"; shelfEl.textContent = "Select date";
                         div.appendChild(nameEl); div.appendChild(shelfEl);
-                        div.onclick = () => { selectedProduct = item; renderProductList(); calculateExpiry(); };
+                        div.onclick = () => { 
+                            triggerHaptic();
+                            selectedProduct = item; 
+                            renderProductList(); 
+                            calculateExpiry(); 
+                        };
                         grid.appendChild(div);
                     } else {
                         grid.appendChild(item.hours ? renderHoursCard(item) : renderDaysCard(item));
@@ -662,9 +682,15 @@
                 }
             }
 
-            // Show bottom sheet modal
-            document.getElementById("resultPanel").classList.add("show");
+            // Show with reliable slide-up animation every time
+            const resultPanelEl = document.getElementById("resultPanel");
+            resultPanelEl.style.animation = 'none';
+            resultPanelEl.offsetHeight; // force reflow so animation restarts cleanly
+            resultPanelEl.style.animation = '';
+            resultPanelEl.classList.add("show");
+
             document.getElementById("modalBackdrop").classList.add("show");
+            document.body.style.overflow = 'hidden';
 
             const overrideSection = document.getElementById("overrideSection");
             const isMixTray3 = !!selectedProduct.special;
@@ -785,6 +811,7 @@
         function closeExpiryModal() {
             document.getElementById("resultPanel").classList.remove("show");
             document.getElementById("modalBackdrop").classList.remove("show");
+            document.body.style.overflow = '';
         }
 
         function copyExpiryLabel() {
@@ -809,6 +836,7 @@
                 const label = document.getElementById("previewLabel");
                 const originalBorder = label.style.border;
                 label.style.border = "3px solid #228B22";
+                triggerHaptic();
                 setTimeout(() => {
                     label.style.border = originalBorder || "3px solid #222";
                 }, 600);
@@ -912,6 +940,13 @@
             debug.style.display = "block";
         }
 
+        // Haptic feedback helper
+        function triggerHaptic() {
+            if (navigator.vibrate) {
+                navigator.vibrate(20);
+            }
+        }
+
         // === Swipe support for calendar ===
         let touchStartX = 0;
         let touchEndX = 0;
@@ -937,30 +972,102 @@
             if (Math.abs(diff) < threshold) return;
 
             if (diff > 0) {
-                // Swiped right → previous month
                 prevMonth();
             } else {
-                // Swiped left → next month
                 nextMonth();
             }
         }
 
+        // === Swipe down to close modal (follows finger) ===
+        let modalStartY = 0;
+        let modalCurrentY = 0;
+        let isDraggingModal = false;
+
+        function setupModalSwipeDown() {
+            const modal = document.getElementById("resultPanel");
+            if (!modal) return;
+
+            modal.addEventListener('touchstart', function(e) {
+                const rect = modal.getBoundingClientRect();
+                const touchY = e.touches[0].clientY;
+
+                if (touchY - rect.top < 140) {
+                    modalStartY = e.touches[0].clientY;
+                    isDraggingModal = true;
+                    modal.style.transition = 'none';
+                    modal.style.animation = 'none';
+                    modal.style.transform = 'translateX(-50%) translateY(0)';
+                }
+            }, { passive: true });
+
+            modal.addEventListener('touchmove', function(e) {
+                if (!isDraggingModal) return;
+
+                modalCurrentY = e.touches[0].clientY;
+                const deltaY = modalCurrentY - modalStartY;
+
+                if (deltaY > 0) {
+                    modal.style.transform = `translateX(-50%) translateY(${deltaY}px)`;
+                    
+                    const backdrop = document.getElementById("modalBackdrop");
+                    const opacity = Math.max(0.55 - (deltaY / 350), 0.15);
+                    backdrop.style.opacity = opacity;
+                }
+            }, { passive: true });
+
+            modal.addEventListener('touchend', function() {
+                if (!isDraggingModal) return;
+
+                const deltaY = modalCurrentY - modalStartY;
+                const modalEl = document.getElementById("resultPanel");
+                const backdrop = document.getElementById("modalBackdrop");
+
+                if (deltaY > 110) {
+                    modalEl.style.transition = 'transform 0.32s cubic-bezier(0.32, 0, 0.67, 1), opacity 0.32s ease';
+                    modalEl.style.transform = `translateX(-50%) translateY(130%)`;
+                    modalEl.style.opacity = '0';
+                    backdrop.style.transition = 'opacity 0.32s ease';
+                    backdrop.style.opacity = '0';
+
+                    setTimeout(() => {
+                        closeExpiryModal();
+                        modalEl.style.transform = '';
+                        modalEl.style.opacity = '';
+                        modalEl.style.transition = '';
+                        backdrop.style.opacity = '';
+                        backdrop.style.transition = '';
+                    }, 320);
+                } else {
+                    modalEl.style.transition = 'transform 0.25s cubic-bezier(0.32, 0, 0.67, 1)';
+                    modalEl.style.transform = 'translateX(-50%) translateY(0)';
+                    backdrop.style.transition = 'opacity 0.25s ease';
+                    backdrop.style.opacity = '0.55';
+
+                    setTimeout(() => {
+                        modalEl.style.transition = '';
+                        backdrop.style.transition = '';
+                    }, 250);
+                }
+
+                isDraggingModal = false;
+                modalCurrentY = 0;
+            }, { passive: true });
+        }
+
         try {
-            // Load saved close time from localStorage or default to 3am
             const savedCloseTime = localStorage.getItem("closeTime");
             broughtOutOverride = savedCloseTime ? parseInt(savedCloseTime) : 3;
 
             syncSectionsFromFlat();
             renderProductList();
 
-            // Set the select value after rendering
             const timeSelect = document.getElementById("timeToggle");
             if (timeSelect) {
                 timeSelect.value = broughtOutOverride.toString();
             }
 
-            // Enable swipe on calendar
             setTimeout(setupCalendarSwipe, 600);
+            setTimeout(setupModalSwipeDown, 700);
         } catch (err) {
             showError(err);
         }

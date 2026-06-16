@@ -392,7 +392,8 @@
             { title: "Deserts", items: [
                 {name:"Cookies", days:17},
                 {name:"Creme Egg Cookies", days:14},
-                {name:"Chocolate Caramel Cookies", days:14}
+                {name:"Chocolate Caramel Cookies", days:14},
+                {name:"Chocolate Discs", manualDate: true}
             ]},
             { title: "Dips", items: [
                 {name: "Garlic 25g", manualDate: true},
@@ -416,6 +417,12 @@
             { title: "Mix Trays", items: [
                 {name: "Mix Tray 9 & 13", special: "9 & 13"},
                 {name: "Mix Tray 6 & 11", special: "6 & 11"}
+            ]},
+            { title: "Dry Stock", items: [
+                {name: "Whirl Butter", manualDate: true},
+                {name: "Herbs", manualDate: true},
+                {name: "Cinnamon Sugar", manualDate: true},
+                {name: "Prep Spray", manualDate: true}
             ]},
             { title: "Sauces Ambient", items: [
                 {name:"Cheese Sauce Ambient", hours:15},
@@ -452,6 +459,9 @@
             if (name === "Goats Cheese") return "G. Cheese";
             if (name === "Boneless Bites") return "B. Bites";
             if (name.includes("Mix Tray")) return "Mix Tray";
+            if (name === "Whirl Butter") return "W. Butter";
+            if (name === "Cinnamon Sugar") return "C. Sugar";
+            if (name === "Chocolate Discs") return "Choc Disc";
             return name.replace(/ Ambient$/, '');
         }
 

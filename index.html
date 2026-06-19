@@ -370,7 +370,8 @@
                 {name:"Kickers", days:10},
                 {name:"Boneless Bites", days:10},
                 {name:"Tenders", days:10},
-                {name:"Wings", days:9}
+                {name:"Wings", days:9},
+                {name:"BBQ Wings", manualDate: true}
             ]},
             { title: "Sides", items: [
                 {name:"Wedges", days:7},
@@ -694,10 +695,9 @@
                 }
             }
 
-            // Show with reliable slide-up animation every time
             const resultPanelEl = document.getElementById("resultPanel");
             resultPanelEl.style.animation = 'none';
-            resultPanelEl.offsetHeight; // force reflow so animation restarts cleanly
+            resultPanelEl.offsetHeight;
             resultPanelEl.style.animation = '';
             resultPanelEl.classList.add("show");
 
@@ -832,6 +832,7 @@
             const dateEl = document.getElementById("previewDate");
             const html = dateEl.innerHTML;
             let textToCopy;
+
             if (html.includes('<br>')) {
                 const parts = html.split('<br>');
                 const datePart = parts[0].replace(/&amp;/g, '&');
@@ -844,14 +845,18 @@
             } else {
                 textToCopy = product + "\n" + weekday + "\n" + dateEl.textContent.replace(/&amp;/g, '&');
             }
+
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const label = document.getElementById("previewLabel");
+                
+                // Flash green border + vibration
                 const originalBorder = label.style.border;
-                label.style.border = "3px solid #228B22";
+                label.style.border = "4px solid #228B22";
                 triggerHaptic();
+
                 setTimeout(() => {
-                    label.style.border = originalBorder || "3px solid #222";
-                }, 600);
+                    label.style.border = originalBorder || "4px solid #222";
+                }, 650);
             }).catch(() => {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
@@ -859,6 +864,15 @@
                 textArea.select();
                 document.execCommand("copy");
                 document.body.removeChild(textArea);
+
+                const label = document.getElementById("previewLabel");
+                const originalBorder = label.style.border;
+                label.style.border = "4px solid #228B22";
+                triggerHaptic();
+
+                setTimeout(() => {
+                    label.style.border = originalBorder || "4px solid #222";
+                }, 650);
             });
         }
 
@@ -952,14 +966,12 @@
             debug.style.display = "block";
         }
 
-        // Haptic feedback helper
         function triggerHaptic() {
             if (navigator.vibrate) {
-                navigator.vibrate(20);
+                navigator.vibrate(25);
             }
         }
 
-        // === Swipe support for calendar ===
         let touchStartX = 0;
         let touchEndX = 0;
 
@@ -990,7 +1002,6 @@
             }
         }
 
-        // === Swipe down to close modal (follows finger) ===
         let modalStartY = 0;
         let modalCurrentY = 0;
         let isDraggingModal = false;
@@ -1050,7 +1061,7 @@
                         backdrop.style.transition = '';
                     }, 320);
                 } else {
-                    modalEl.style.transition = 'transform 0.25s cubic-bezier(0.32, 0, 0.67, 1)';
+                    modalEl.style.transition = 'transform 0.25s cubicEase(0.32, 0, 0.67, 1)';
                     modalEl.style.transform = 'translateX(-50%) translateY(0)';
                     backdrop.style.transition = 'opacity 0.25s ease';
                     backdrop.style.opacity = '0.55';

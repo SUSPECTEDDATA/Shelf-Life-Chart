@@ -352,7 +352,7 @@
                 {name:"Pineapple", days:10},
                 {name:"Sweetcorn", days:11},
                 {name:"Gherkins", days:16},
-                {name:"Picante Peppers", days:25}
+                {name:"Piquante Peppers", days:25}
             ]},
             { title: "Meats", items: [
                 {name:"Tuna", days:6},
@@ -390,7 +390,7 @@
                 {name:"Thin Crust 13.5\"", days:21},
                 {name:"Wrapz", days:22}
             ]},
-            { title: "Deserts", items: [
+            { title: "Dessert", items: [
                 {name:"Cookies", days:17},
                 {name:"Creme Egg Cookies", days:14},
                 {name:"Chocolate Caramel Cookies", days:14},
@@ -451,7 +451,8 @@
         }
 
         function getDisplayName(name) {
-            if (name === "Picante Peppers") return "Picante";
+            if (name === "Piquante Peppers") return "Piquante";
+            if (name === "Cheese Sauce" || name === "Cheese Sauce Ambient") return "C. Sauce";
             if (name === "Chocolate Caramel Cookies") return "C. Cookies";
             if (name === "Burger Sauce") return "🍔 Sauce";
             if (name === "Garlic Butter" || name === "Garlic Spread Ambient") return "Garlic";
@@ -524,7 +525,7 @@
 
             const toggleBtn = document.createElement("button");
             toggleBtn.style.cssText = "background:#555; color:white; border:none; padding:8px 12px; border-radius:9999px; font-size:12px; cursor:pointer; margin-left:auto; flex-shrink:0;";
-            toggleBtn.textContent = quickNavExpanded ? "▲ Less" : "▼ More";
+            toggleBtn.textContent = quickNavExpanded ? "▲" : "▼";
             toggleBtn.onclick = () => {
                 quickNavExpanded = !quickNavExpanded;
                 renderProductList();
@@ -577,7 +578,7 @@
                         <option value="4">4am</option>
                         <option value="5">5am</option>
                     `;
-                    toggle.value = broughtOutOverride ? broughtOutOverride.toString() : "3";
+                    toggle.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3"; // ← Fixed (handles 0 correctly)
                     toggle.onchange = updateBroughtOutTime;
                     header.appendChild(toggle);
                 }
@@ -849,7 +850,6 @@
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const label = document.getElementById("previewLabel");
                 
-                // Flash green border + vibration
                 const originalBorder = label.style.border;
                 label.style.border = "4px solid #228B22";
                 triggerHaptic();
@@ -1086,7 +1086,7 @@
 
             const timeSelect = document.getElementById("timeToggle");
             if (timeSelect) {
-                timeSelect.value = broughtOutOverride.toString();
+                timeSelect.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3";
             }
 
             setTimeout(setupCalendarSwipe, 600);

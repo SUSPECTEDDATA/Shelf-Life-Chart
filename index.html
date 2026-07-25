@@ -5,82 +5,212 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Shelf Life Chart</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         :root {
-            --md-primary: #228B22;
-            --md-surface: #f8f9f8;
-            --md-on-surface: #212529;
+            --primary: #1b7a32;
+            --primary-light: #e8f5e9;
+            --primary-dark: #145c26;
+            --surface: #ffffff;
+            --bg: #f4f6f4;
+            --text: #1a1a1a;
+            --text-secondary: #5c5c5c;
+            --border: #e0e4e0;
+            --danger: #c62828;
+            --radius: 16px;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 28px rgba(0,0,0,0.12);
         }
         
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Inter', system_ui, -apple-system, sans-serif;
-            background: #f0f0f0;
-            color: var(--md-on-surface);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             line-height: 1.5;
-            padding: 0;
             min-height: 100vh;
             -webkit-tap-highlight-color: transparent;
+            -webkit-font-smoothing: antialiased;
         }
         
         .main {
-            padding: 24px 16px 40px;
+            padding: 12px 16px 100px;
             max-width: 480px;
             margin: 0 auto;
+        }
+        
+        #quickNav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 10px 0 14px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg);
+        }
+        
+        .nav-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .nav-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        
+        .nav-btn:active { opacity: 0.85; }
+        
+        .nav-toggle {
+            background: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        
+        .search-wrap {
             position: relative;
+            width: 100%;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 42px 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            background: white;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+        
+        .search-input::placeholder {
+            color: #999;
+        }
+        
+        /* Hide the native browser clear button */
+        input[type="search"]::-webkit-search-cancel-button,
+        input[type="search"]::-webkit-search-decoration {
+            -webkit-appearance: none;
+            appearance: none;
+            display: none;
+        }
+        
+        .search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: none;
+            color: #555;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            padding: 0;
+        }
+        
+        .search-clear.visible {
+            display: flex;
+        }
+        
+        .search-clear:active {
+            background: #ccc;
         }
         
         .section-header {
-            font-size: 20px;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--md-primary);
-            margin: 32px 0 12px;
-            padding-left: 4px;
+            color: var(--text);
+            margin: 24px 0 12px;
+            padding: 0 2px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+        
+        .section-header:first-of-type { margin-top: 4px; }
         
         .product-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
         
         .product-card {
-            background: white;
-            border-radius: 24px;
-            padding: 20px 12px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 18px 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow);
+            border: 1.5px solid transparent;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            min-height: 118px;
+            min-height: 108px;
+        }
+        
+        .product-card:active {
+            transform: scale(0.97);
         }
         
         .product-card.selected {
-            background: #e8f4e8;
-            border: 3px solid var(--md-primary);
+            background: var(--primary-light);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
         }
         
         .product-name {
-            font-size: 17px;
+            font-size: 15px;
             font-weight: 600;
             line-height: 1.3;
             margin-bottom: 8px;
         }
         
         .shelf-life {
-            margin-top: 8px;
-            font-size: 13px;
-            background: #e8f4e8;
-            color: var(--md-primary);
-            padding: 4px 18px;
+            font-size: 12px;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 12px;
             border-radius: 9999px;
-            font-weight: 500;
+            font-weight: 600;
+        }
+        
+        .product-card.selected .shelf-life {
+            background: var(--primary);
+            color: white;
         }
         
         .result {
@@ -88,10 +218,10 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            background: white;
-            border-radius: 28px 28px 0 0;
-            padding: 32px 24px 40px;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+            background: var(--surface);
+            border-radius: 24px 24px 0 0;
+            padding: 28px 20px 36px;
+            box-shadow: var(--shadow-lg);
             text-align: center;
             width: 100%;
             max-width: 480px;
@@ -101,242 +231,401 @@
         
         .result.show {
             display: block;
-            animation: slideUpModal 0.3s ease forwards;
+            animation: slideUpModal 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
         }
-
+        
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.55);
+            background: rgba(0,0,0,0.5);
             z-index: 9998;
             display: none;
+            backdrop-filter: blur(2px);
         }
         
-        .modal-backdrop.show {
-            display: block;
-        }
-
+        .modal-backdrop.show { display: block; }
+        
         @keyframes slideUpModal {
-            from { 
-                opacity: 0; 
-                transform: translateX(-50%) translateY(100%); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateX(-50%) translateY(0); 
-            }
+            from { opacity: 0; transform: translateX(-50%) translateY(100%); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-
+        
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: none;
+            font-size: 20px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        
+        .modal-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 16px;
+            margin-top: 4px;
+        }
+        
         .expiry-card {
-            background: white;
-            border: 4px solid #222;
-            border-radius: 18px;
-            padding: 26px 18px;
+            background: var(--surface);
+            border: 2.5px solid #222;
+            border-radius: 14px;
+            padding: 22px 16px;
             margin: 0 auto;
             width: 100%;
-            max-width: 300px;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+            max-width: 280px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.1);
             cursor: pointer;
         }
         
         .expiry-product {
-            font-size: 23px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1.15;
+            margin-bottom: 6px;
+            line-height: 1.2;
         }
         
         .expiry-weekday {
-            font-size: 29px;
-            font-weight: 800;
-            color: #e63939;
-            margin-bottom: 4px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--danger);
+            margin-bottom: 2px;
         }
         
         .expiry-datetime {
-            font-size: 40px;
+            font-size: 32px;
             font-weight: 800;
-            letter-spacing: -1.5px;
-            line-height: 1.05;
+            letter-spacing: -1.2px;
+            line-height: 1.1;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 16px 8px !important;
-            font-size: 15px;
-        }
-        .mobile-action-btn {
-            min-width: 44px;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            margin: 0 3px;
-        }
-
-        #errorDebug {
-            margin: 20px 16px;
-            padding: 16px;
-            background: #ffe6e6;
-            color: #c00;
-            border-radius: 12px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            font-size: 14px;
+        
+        #overrideSection {
+            margin-top: 20px;
             display: none;
         }
-
-        .calendar {
-            width: 100%;
-            max-width: 280px;
-            margin: 0 auto;
+        
+        .override-box {
+            background: var(--surface);
+            border: 2px solid #222;
+            border-radius: 18px;
+            padding: 16px;
         }
+        
+        .override-header {
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            padding-right: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .override-header-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        #calendarArrow {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+        
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
             font-weight: 600;
+            font-size: 15px;
         }
+        
         .calendar-header button {
             background: #f0f0f0;
             border: none;
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
         }
+        
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        
         .calendar-grid {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
             gap: 4px;
             text-align: center;
         }
+        
         .calendar-day {
-            padding: 8px 0;
+            padding: 9px 0;
             font-size: 14px;
             border-radius: 50%;
             cursor: pointer;
+            font-weight: 500;
         }
-        .calendar-day:hover {
-            background: #e8f4e8;
-        }
+        
+        .calendar-day:hover { background: var(--primary-light); }
+        
         .calendar-day.selected {
-            background: #228B22;
+            background: var(--primary);
             color: white;
             font-weight: 700;
         }
-        .calendar-day.other-month {
-            color: #aaa;
+        
+        .calendar-day.other-month { color: #bbb; }
+        
+        #settingsPanel {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 10000;
+            align-items: flex-end;
         }
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
+        
+        .settings-sheet {
+            background: var(--surface);
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            border-radius: 24px 24px 0 0;
+            max-height: 92vh;
+            overflow: auto;
+        }
+        
+        .settings-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            z-index: 10;
+        }
+        
+        .settings-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .settings-close {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .settings-body { padding: 20px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+            font-size: 14px;
+        }
+        
+        th {
+            padding: 10px 6px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+            color: var(--text-secondary);
             font-size: 12px;
-            color: #666;
-            margin-bottom: 6px;
+            text-transform: uppercase;
         }
-
-        /* Hide scrollbar for quick nav */
-        #quickNav::-webkit-scrollbar {
+        
+        td {
+            padding: 12px 6px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        
+        .mobile-action-btn {
+            min-width: 36px;
+            min-height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            margin: 0 2px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 14px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            background: #fafafa;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+        
+        .btn-primary {
+            margin-top: 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        #errorDebug {
+            margin: 20px 16px;
+            padding: 16px;
+            background: #ffebee;
+            color: #b71c1c;
+            border-radius: 12px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 13px;
             display: none;
         }
-        #quickNav {
-            scrollbar-width: none;
-            -ms-overflow-style: none;
+        
+        #timeToggle {
+            font-size: 12px;
+            padding: 5px 10px;
+            border: 1.5px solid var(--primary);
+            border-radius: 9999px;
+            background: white;
+            cursor: pointer;
+            color: var(--primary);
+            font-weight: 600;
+            min-width: 64px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="main" style="position: relative;">
-        <!-- Quick nav buttons -->
-        <div id="quickNav" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; padding:8px 0; border-bottom:1px solid #ddd; position: sticky; top: 0; z-index: 100; background: #f0f0f0;">
-            <!-- Populated by JS -->
-        </div>
+    <div class="main">
+        <div id="quickNav"></div>
         <div id="productSections"></div>
         <div id="errorDebug"></div>
 
-        <!-- Expiry Modal (Bottom Sheet) -->
         <div class="result" id="resultPanel">
-            <div onclick="closeExpiryModal()" style="position:absolute; top:16px; right:20px; font-size:28px; color:#888; cursor:pointer; line-height:1;">×</div>
-            
-            <h3 style="margin-top:8px;">Your Expiry Date</h3>
+            <button class="modal-close" onclick="closeExpiryModal()">×</button>
+            <div class="modal-title">Use by</div>
             <div class="expiry-card" id="previewLabel" onclick="copyExpiryLabel()">
                 <div class="expiry-product" id="previewProduct"></div>
                 <div class="expiry-weekday" id="previewWeekday"></div>
                 <div class="expiry-datetime" id="previewDate"></div>
             </div>
-
-            <div id="overrideSection" style="margin-top:20px; display:none;">
-                <div style="background:white; border:3px solid #222; border-radius:24px; padding:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                    <div onclick="toggleCalendar()" style="text-align:center; cursor:pointer; margin-bottom:12px; position:relative; padding-right:30px;">
-                        <div style="font-size:18px; font-weight:600; color:#222;">Override expiry date</div>
-                        <div id="calendarArrow" style="position:absolute; right:0; top:50%; transform:translateY(-50%); font-size:28px; transition: transform 0.2s;">▼</div>
+            <div id="overrideSection">
+                <div class="override-box">
+                    <div class="override-header" onclick="toggleCalendar()">
+                        <div class="override-header-title">Override date</div>
+                        <div id="calendarArrow">▼</div>
                     </div>
-                    <div id="calendarContainer" style="margin:0 auto; max-width:280px; display:none;"></div>
+                    <div id="calendarContainer" style="display:none;"></div>
                 </div>
             </div>
         </div>
-
-        <!-- Modal backdrop -->
         <div id="modalBackdrop" class="modal-backdrop" onclick="closeExpiryModal()"></div>
     </div>
 
-    <!-- Settings Panel -->
-    <div id="settingsPanel" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:9999; align-items:flex-end;">
-        <div style="background:white; width:100%; max-width:480px; margin:0 auto; border-top-left-radius:28px; border-top-right-radius:28px; max-height:92vh; overflow:auto;">
-            <div style="padding:20px 24px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; z-index:10;">
-                <h2 style="margin:0; font-size:22px;">Item Settings • Campaign 2</h2>
-                <button onclick="toggleSettings()" style="background:#228B22; color:white; border:none; width:48px; height:48px; border-radius:50%; font-size:28px;">✕</button>
+    <div id="settingsPanel">
+        <div class="settings-sheet">
+            <div class="settings-header">
+                <h2>Item Settings</h2>
+                <button class="settings-close" onclick="toggleSettings()">✕</button>
             </div>
-            
-            <div style="padding:24px;">
-                <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+            <div class="settings-body">
+                <table>
                     <thead>
-                        <tr style="background:#f8f9fa;">
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:40px;">#</th>
-                            <th style="padding:12px; text-align:left; border-bottom:2px solid #ddd;">Name</th>
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:70px;">Days</th>
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd; width:70px;">Hours</th>
-                            <th style="padding:12px; text-align:center; border-bottom:2px solid #ddd;">Actions</th>
+                        <tr>
+                            <th style="width:36px; text-align:center;">#</th>
+                            <th>Name</th>
+                            <th style="width:50px; text-align:center;">Days</th>
+                            <th style="width:50px; text-align:center;">Hrs</th>
+                            <th style="text-align:center;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="settingsItemsList"></tbody>
                 </table>
-
-                <h3 id="settingsFormTitle" style="margin-bottom:12px;">Add / Edit Item</h3>
-                
-                <div style="margin-bottom:16px;">
-                    <label style="font-size:14px; display:block; margin-bottom:8px;">Unit</label>
-                    <select id="newUnit" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px;">
+                <h3 id="settingsFormTitle" style="margin-bottom:14px; font-size:16px;">Add / Edit Item</h3>
+                <div class="form-group">
+                    <label>Unit</label>
+                    <select id="newUnit" class="form-control">
                         <option value="days">Days</option>
                         <option value="hours">Hours</option>
                     </select>
                 </div>
-
-                <div style="margin-bottom:16px;">
-                    <label style="font-size:14px; display:block; margin-bottom:8px;">Value</label>
-                    <input id="newValue" type="number" placeholder="10" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px;">
+                <div class="form-group">
+                    <label>Value</label>
+                    <input id="newValue" type="number" placeholder="10" class="form-control">
                 </div>
-
-                <input id="newName" placeholder="Product name" style="width:100%; padding:14px; border:2px solid #ddd; border-radius:16px; font-size:16px;">
-
-                <button onclick="addOrUpdateItem()" style="margin-top:28px; background:#228B22; color:white; border:none; width:100%; padding:14px; border-radius:16px; font-size:16px;">Save Item</button>
+                <div class="form-group">
+                    <label>Product name</label>
+                    <input id="newName" placeholder="e.g. Hot Honey" class="form-control">
+                </div>
+                <button onclick="addOrUpdateItem()" class="btn-primary">Save Item</button>
             </div>
         </div>
     </div>
 
     <script>
-        // === HARD-CODED SECTIONS ===
         let sections = [
             { title: "Prepped Sauces", items: [
                 {name:"Hot Honey", days:35},
@@ -345,7 +634,8 @@
                 {name:"Pizza Sauce", days:10},
                 {name:"BBQ Sauce", days:10},
                 {name:"Garlic Butter", days:10},
-                {name:"Pesto Drizzle", days:28}
+                {name:"Pesto Drizzle", days:28},
+                {name:"Franks", manualDate: true}
             ]},
             { title: "Veg", items: [
                 {name:"Jalapenos", days:11},
@@ -434,19 +724,20 @@
             ]}
         ];
 
-        let shelfLifeItems = sections.flatMap(section => section.items.map(item => ({...item})));
+        let shelfLifeItems = sections.flatMap(s => s.items.map(i => ({...i})));
         let selectedProduct = null;
         let editingIndex = -1;
         let broughtOutOverride = null;
         let quickNavExpanded = false;
+        let currentCalendarDate = new Date();
+        let searchTerm = "";
 
         function scrollToSection(sectionId) {
             const target = document.getElementById(sectionId);
             if (!target) return;
             const nav = document.getElementById("quickNav");
             const navHeight = nav ? nav.offsetHeight : 80;
-            const yOffset = -(navHeight + 12);
-            const y = target.getBoundingClientRect().top + window.pageYOffset + yOffset;
+            const y = target.getBoundingClientRect().top + window.pageYOffset - (navHeight + 12);
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
 
@@ -468,6 +759,11 @@
             return name.replace(/ Ambient$/, '');
         }
 
+        function matchesSearch(item) {
+            if (!searchTerm) return true;
+            return item.name.toLowerCase().includes(searchTerm.toLowerCase());
+        }
+
         function renderDaysCard(item) {
             const div = document.createElement("div");
             div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
@@ -478,7 +774,7 @@
             div.onclick = () => { 
                 triggerHaptic();
                 selectedProduct = item; 
-                renderProductList(); 
+                renderProductSections();
                 calculateExpiry(); 
             };
             return div;
@@ -493,73 +789,111 @@
             div.onclick = () => { 
                 triggerHaptic();
                 selectedProduct = item; 
-                renderProductList(); 
+                renderProductSections();
                 calculateExpiry(); 
             };
             return div;
         }
 
-        function renderProductList() {
-            const container = document.getElementById("productSections");
-            container.innerHTML = "";
+        function renderQuickNav() {
             const nav = document.getElementById("quickNav");
             nav.innerHTML = "";
 
             const priorityTitles = ["Prepped Sauces", "Veg", "Sauces Ambient"];
 
             const priorityRow = document.createElement("div");
-            priorityRow.style.cssText = "display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:8px;";
+            priorityRow.className = "nav-row";
 
             sections.forEach(section => {
-                if (section.items.length === 0) return;
-                if (!priorityTitles.includes(section.title)) return;
-
+                if (section.items.length === 0 || !priorityTitles.includes(section.title)) return;
                 const btn = document.createElement("button");
-                const displayTitle = section.title === "Prepped Sauces" ? "Sauces" : section.title;
-                btn.textContent = displayTitle;
-                btn.style.cssText = "background:#228B22; color:white; border:none; padding:10px 14px; border-radius:9999px; font-size:13px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
-                const sectionId = "section-" + section.title.replace(/\s+/g, "-");
-                btn.onclick = () => scrollToSection(sectionId);
+                btn.textContent = section.title === "Prepped Sauces" ? "Sauces" : section.title;
+                btn.className = "nav-btn";
+                btn.onclick = () => scrollToSection("section-" + section.title.replace(/\s+/g, "-"));
                 priorityRow.appendChild(btn);
             });
 
             const toggleBtn = document.createElement("button");
-            toggleBtn.style.cssText = "background:#555; color:white; border:none; padding:8px 12px; border-radius:9999px; font-size:12px; cursor:pointer; margin-left:auto; flex-shrink:0;";
+            toggleBtn.className = "nav-toggle";
             toggleBtn.textContent = quickNavExpanded ? "▲" : "▼";
             toggleBtn.onclick = () => {
                 quickNavExpanded = !quickNavExpanded;
-                renderProductList();
+                renderQuickNav();
             };
             priorityRow.appendChild(toggleBtn);
-
             nav.appendChild(priorityRow);
 
-            const otherRow = document.createElement("div");
-            otherRow.style.cssText = `display:${quickNavExpanded ? 'flex' : 'none'}; gap:8px; flex-wrap:wrap;`;
+            if (quickNavExpanded) {
+                const otherRow = document.createElement("div");
+                otherRow.className = "nav-row";
+                sections.forEach(section => {
+                    if (section.items.length === 0 || priorityTitles.includes(section.title)) return;
+                    const btn = document.createElement("button");
+                    btn.textContent = section.title;
+                    btn.className = "nav-btn";
+                    btn.style.fontSize = "12px";
+                    btn.style.padding = "7px 12px";
+                    btn.onclick = () => scrollToSection("section-" + section.title.replace(/\s+/g, "-"));
+                    otherRow.appendChild(btn);
+                });
+                nav.appendChild(otherRow);
+            }
+
+            // Search with single custom clear button
+            const searchWrap = document.createElement("div");
+            searchWrap.className = "search-wrap";
+
+            const searchInput = document.createElement("input");
+            searchInput.type = "search";
+            searchInput.id = "searchInput";
+            searchInput.className = "search-input";
+            searchInput.placeholder = "Search items…";
+            searchInput.value = searchTerm;
+            searchInput.autocomplete = "off";
+            searchInput.autocorrect = "off";
+            searchInput.autocapitalize = "off";
+            searchInput.spellcheck = false;
+
+            const clearBtn = document.createElement("button");
+            clearBtn.type = "button";
+            clearBtn.className = "search-clear" + (searchTerm ? " visible" : "");
+            clearBtn.innerHTML = "×";
+            clearBtn.setAttribute("aria-label", "Clear search");
+            clearBtn.onclick = () => {
+                searchTerm = "";
+                searchInput.value = "";
+                clearBtn.classList.remove("visible");
+                renderProductSections();
+                searchInput.focus();
+            };
+
+            searchInput.oninput = (e) => {
+                searchTerm = e.target.value;
+                clearBtn.classList.toggle("visible", !!searchTerm);
+                renderProductSections();
+            };
+
+            searchInput.onkeydown = (e) => {
+                if (e.key === "Enter") e.target.blur();
+            };
+
+            searchWrap.appendChild(searchInput);
+            searchWrap.appendChild(clearBtn);
+            nav.appendChild(searchWrap);
+        }
+
+        function renderProductSections() {
+            const container = document.getElementById("productSections");
+            container.innerHTML = "";
 
             sections.forEach(section => {
-                if (section.items.length === 0) return;
-                if (priorityTitles.includes(section.title)) return;
+                const filteredItems = section.items.filter(matchesSearch);
+                if (filteredItems.length === 0) return;
 
-                const btn = document.createElement("button");
-                btn.textContent = section.title;
-                btn.style.cssText = "background:#228B22; color:white; border:none; padding:8px 12px; border-radius:9999px; font-size:12px; white-space:nowrap; cursor:pointer; flex-shrink:0;";
-                const sectionId = "section-" + section.title.replace(/\s+/g, "-");
-                btn.onclick = () => scrollToSection(sectionId);
-                otherRow.appendChild(btn);
-            });
-
-            nav.appendChild(otherRow);
-
-            sections.forEach(section => {
-                if (section.items.length === 0) return;
                 const sectionId = "section-" + section.title.replace(/\s+/g, "-");
                 const header = document.createElement("h2");
                 header.className = "section-header";
                 header.id = sectionId;
-                header.style.display = "flex";
-                header.style.alignItems = "center";
-                header.style.justifyContent = "space-between";
 
                 const titleSpan = document.createElement("span");
                 titleSpan.textContent = section.title;
@@ -568,7 +902,6 @@
                 if (section.title === "Sauces Ambient") {
                     const toggle = document.createElement("select");
                     toggle.id = "timeToggle";
-                    toggle.style.cssText = "font-size:13px; padding:6px 12px; border:2px solid #228B22; border-radius:9999px; background:white; cursor:pointer; color:#228B22; font-weight:600; min-width:70px; text-align:center;";
                     toggle.innerHTML = `
                         <option value="23">11pm</option>
                         <option value="0">12am</option>
@@ -578,7 +911,7 @@
                         <option value="4">4am</option>
                         <option value="5">5am</option>
                     `;
-                    toggle.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3"; // ← Fixed (handles 0 correctly)
+                    toggle.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3";
                     toggle.onchange = updateBroughtOutTime;
                     header.appendChild(toggle);
                 }
@@ -587,7 +920,7 @@
 
                 const grid = document.createElement("div");
                 grid.className = "product-grid";
-                section.items.forEach(item => {
+                filteredItems.forEach(item => {
                     if (item.special) {
                         const div = document.createElement("div");
                         div.className = "product-card" + (selectedProduct && selectedProduct.name === item.name ? " selected" : "");
@@ -597,7 +930,7 @@
                         div.onclick = () => { 
                             triggerHaptic();
                             selectedProduct = item; 
-                            renderProductList(); 
+                            renderProductSections();
                             calculateExpiry(); 
                         };
                         grid.appendChild(div);
@@ -610,7 +943,7 @@
                         div.onclick = () => { 
                             triggerHaptic();
                             selectedProduct = item; 
-                            renderProductList(); 
+                            renderProductSections();
                             calculateExpiry(); 
                         };
                         grid.appendChild(div);
@@ -622,6 +955,11 @@
             });
         }
 
+        function renderAll() {
+            renderQuickNav();
+            renderProductSections();
+        }
+
         function calculateExpiryForDays(product) {
             const now = new Date();
             let expiryDate = new Date(now);
@@ -630,16 +968,13 @@
         }
 
         function calculateExpiryForHours(product) {
-            const now = new Date();
-            return new Date(now.getTime() + product.hours * 60 * 60 * 1000);
+            return new Date(Date.now() + product.hours * 60 * 60 * 1000);
         }
 
         function updateBroughtOutTime() {
             const select = document.getElementById("timeToggle");
             broughtOutOverride = select.value ? parseInt(select.value) : null;
-            if (broughtOutOverride !== null) {
-                localStorage.setItem("closeTime", broughtOutOverride.toString());
-            }
+            if (broughtOutOverride !== null) localStorage.setItem("closeTime", broughtOutOverride.toString());
             if (selectedProduct && selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
                 calculateExpiry();
             }
@@ -649,12 +984,7 @@
             if (!selectedProduct) return;
             let expiryDate = selectedProduct.hours ? calculateExpiryForHours(selectedProduct) : calculateExpiryForDays(selectedProduct);
 
-            const isMixTray = !!selectedProduct.special;
-            if (isMixTray) {
-                expiryDate = new Date();
-            }
-
-            if (selectedProduct.manualDate) {
+            if (selectedProduct.special || selectedProduct.manualDate) {
                 expiryDate = new Date();
             }
 
@@ -663,32 +993,23 @@
                 const nowForCap = new Date();
                 let capDate = new Date(nowForCap);
                 capDate.setHours(capHour, 0, 0, 0);
-                if (capDate.getTime() <= nowForCap.getTime()) {
-                    capDate.setDate(capDate.getDate() + 1);
-                }
-                if (expiryDate > capDate) {
-                    expiryDate = capDate;
-                }
+                if (capDate.getTime() <= nowForCap.getTime()) capDate.setDate(capDate.getDate() + 1);
+                if (expiryDate > capDate) expiryDate = capDate;
             }
 
             const formatUKDate = d => d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
             const getWeekday = d => d.toLocaleDateString('en-GB', { weekday: 'long' });
             const formatTime = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
-            const isMixTray2 = !!selectedProduct.special;
-            const isManualDate = !!selectedProduct.manualDate;
-
             document.getElementById("previewProduct").textContent = getDisplayName(selectedProduct.name);
 
-            if (isMixTray2) {
+            if (selectedProduct.special) {
                 document.getElementById("previewWeekday").innerHTML = "";
                 document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + selectedProduct.special;
             } else {
-                document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${getWeekday(expiryDate)}</span>`;
+                document.getElementById("previewWeekday").innerHTML = `<span style="color:#c62828;">${getWeekday(expiryDate)}</span>`;
                 if (selectedProduct.hours && selectedProduct.name.includes("Ambient")) {
-                    const broughtOut = formatTime(new Date());
-                    const expiryTime = formatTime(expiryDate);
-                    document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + broughtOut + '-' + expiryTime;
+                    document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + formatTime(new Date()) + '–' + formatTime(expiryDate);
                 } else if (selectedProduct.hours) {
                     document.getElementById("previewDate").innerHTML = formatUKDate(expiryDate) + '<br>' + formatTime(expiryDate);
                 } else {
@@ -701,15 +1022,13 @@
             resultPanelEl.offsetHeight;
             resultPanelEl.style.animation = '';
             resultPanelEl.classList.add("show");
-
             document.getElementById("modalBackdrop").classList.add("show");
             document.body.style.overflow = 'hidden';
 
             const overrideSection = document.getElementById("overrideSection");
-            const isMixTray3 = !!selectedProduct.special;
-            if (!selectedProduct.hours && !isMixTray3) {
+            if (!selectedProduct.hours && !selectedProduct.special) {
                 overrideSection.style.display = "block";
-                if (isManualDate) {
+                if (selectedProduct.manualDate) {
                     document.getElementById("calendarContainer").style.display = "block";
                     document.getElementById("calendarArrow").textContent = "▲";
                 } else {
@@ -752,9 +1071,12 @@
 
             const prevMonthDays = new Date(year, month, 0).getDate();
             for (let i = startDay - 1; i >= 0; i--) {
+                const day = prevMonthDays - i;
+                const thisDate = new Date(year, month - 1, day);
                 const dayEl = document.createElement("div");
                 dayEl.className = "calendar-day other-month";
-                dayEl.textContent = prevMonthDays - i;
+                dayEl.textContent = day;
+                dayEl.onclick = () => selectCalendarDate(thisDate);
                 grid.appendChild(dayEl);
             }
 
@@ -763,28 +1085,31 @@
                 dayEl.className = "calendar-day";
                 dayEl.textContent = day;
                 const thisDate = new Date(year, month, day);
-
                 if (selectedDate && thisDate.toDateString() === selectedDate.toDateString()) {
                     dayEl.classList.add("selected");
                 }
-
-                dayEl.onclick = () => {
-                    document.getElementById("previewDate").innerHTML = thisDate.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
-                    document.getElementById("previewWeekday").innerHTML = `<span style="color:#e63939;">${thisDate.toLocaleDateString('en-GB', { weekday: 'long' })}</span>`;
-                    renderCalendar(year, month, thisDate);
-                };
+                dayEl.onclick = () => selectCalendarDate(thisDate);
                 grid.appendChild(dayEl);
             }
 
             const remaining = 42 - (startDay + daysInMonth);
             for (let i = 1; i <= remaining; i++) {
+                const thisDate = new Date(year, month + 1, i);
                 const dayEl = document.createElement("div");
                 dayEl.className = "calendar-day other-month";
                 dayEl.textContent = i;
+                dayEl.onclick = () => selectCalendarDate(thisDate);
                 grid.appendChild(dayEl);
             }
 
             container.appendChild(grid);
+        }
+
+        function selectCalendarDate(date) {
+            document.getElementById("previewDate").innerHTML = date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            document.getElementById("previewWeekday").innerHTML = `<span style="color:#c62828;">${date.toLocaleDateString('en-GB', { weekday: 'long' })}</span>`;
+            currentCalendarDate = new Date(date);
+            renderCalendar(date.getFullYear(), date.getMonth(), date);
         }
 
         function prevMonth() {
@@ -838,25 +1163,19 @@
                 const parts = html.split('<br>');
                 const datePart = parts[0].replace(/&amp;/g, '&');
                 const timePart = (parts[1] || '').replace(/&amp;/g, '&');
-                if (weekday.trim() === "") {
-                    textToCopy = product + "\n" + datePart + "\n" + timePart;
-                } else {
-                    textToCopy = product + "\n" + weekday + "\n" + datePart + "\n" + timePart;
-                }
+                textToCopy = weekday.trim() === "" 
+                    ? product + "\n" + datePart + "\n" + timePart
+                    : product + "\n" + weekday + "\n" + datePart + "\n" + timePart;
             } else {
                 textToCopy = product + "\n" + weekday + "\n" + dateEl.textContent.replace(/&amp;/g, '&');
             }
 
             navigator.clipboard.writeText(textToCopy).then(() => {
                 const label = document.getElementById("previewLabel");
-                
                 const originalBorder = label.style.border;
-                label.style.border = "4px solid #228B22";
+                label.style.border = "2.5px solid #1b7a32";
                 triggerHaptic();
-
-                setTimeout(() => {
-                    label.style.border = originalBorder || "4px solid #222";
-                }, 650);
+                setTimeout(() => label.style.border = originalBorder || "2.5px solid #222", 650);
             }).catch(() => {
                 const textArea = document.createElement("textarea");
                 textArea.value = textToCopy;
@@ -864,15 +1183,11 @@
                 textArea.select();
                 document.execCommand("copy");
                 document.body.removeChild(textArea);
-
                 const label = document.getElementById("previewLabel");
                 const originalBorder = label.style.border;
-                label.style.border = "4px solid #228B22";
+                label.style.border = "2.5px solid #1b7a32";
                 triggerHaptic();
-
-                setTimeout(() => {
-                    label.style.border = originalBorder || "4px solid #222";
-                }, 650);
+                setTimeout(() => label.style.border = originalBorder || "2.5px solid #222", 650);
             });
         }
 
@@ -888,7 +1203,7 @@
             [shelfLifeItems[index], shelfLifeItems[newIndex]] = [shelfLifeItems[newIndex], shelfLifeItems[index]];
             syncSectionsFromFlat();
             renderSettingsList(); 
-            renderProductList();
+            renderAll();
         }
 
         function renderSettingsList() {
@@ -896,15 +1211,15 @@
             tbody.innerHTML = "";
             shelfLifeItems.forEach((item, i) => {
                 const tr = document.createElement("tr");
-                tr.innerHTML = `<td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center; font-weight:600; color:#555;">${i+1}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee;">${item.name}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.days || ''}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">${item.hours || ''}</td>
-                    <td style="padding:16px 8px; border-bottom:1px solid #eee; text-align:center;">
+                tr.innerHTML = `<td style="text-align:center; font-weight:600; color:#888;">${i+1}</td>
+                    <td>${item.name}</td>
+                    <td style="text-align:center;">${item.days || ''}</td>
+                    <td style="text-align:center;">${item.hours || ''}</td>
+                    <td style="text-align:center;">
                         <button onclick="moveItem(${i}, -1)" class="mobile-action-btn" style="background:#555;color:white;">↑</button>
                         <button onclick="moveItem(${i}, 1)" class="mobile-action-btn" style="background:#555;color:white;">↓</button>
-                        <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#08f;color:white;">Edit</button>
-                        <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c00;color:white;">Delete</button>
+                        <button onclick="editItem(${i});" class="mobile-action-btn" style="background:#1976d2;color:white;">Edit</button>
+                        <button onclick="deleteItem(${i});" class="mobile-action-btn" style="background:#c62828;color:white;">Del</button>
                     </td>`;
                 tbody.appendChild(tr);
             });
@@ -924,7 +1239,7 @@
                 shelfLifeItems.splice(index, 1);
                 syncSectionsFromFlat();
                 renderSettingsList(); 
-                renderProductList();
+                renderAll();
             }
         }
 
@@ -938,12 +1253,12 @@
             if (editingIndex >= 0) shelfLifeItems[editingIndex] = newItem; else shelfLifeItems.push(newItem);
             syncSectionsFromFlat();
             renderSettingsList(); 
-            renderProductList();
+            renderAll();
             editingIndex = -1;
             document.getElementById("settingsFormTitle").textContent = "Add / Edit Item";
             document.getElementById("newName").value = "";
             document.getElementById("newValue").value = "";
-            alert("Item saved! (Temporary - will reset on refresh)");
+            alert("Item saved! (Temporary – will reset on refresh)");
         }
 
         function syncSectionsFromFlat() {
@@ -967,44 +1282,24 @@
         }
 
         function triggerHaptic() {
-            if (navigator.vibrate) {
-                navigator.vibrate(25);
-            }
+            if (navigator.vibrate) navigator.vibrate(25);
         }
 
-        let touchStartX = 0;
-        let touchEndX = 0;
+        let touchStartX = 0, touchEndX = 0;
 
         function setupCalendarSwipe() {
             const cal = document.getElementById("calendarContainer");
             if (!cal) return;
-
-            cal.addEventListener('touchstart', function(e) {
-                touchStartX = e.changedTouches[0].screenX;
-            }, { passive: true });
-
-            cal.addEventListener('touchend', function(e) {
+            cal.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+            cal.addEventListener('touchend', e => {
                 touchEndX = e.changedTouches[0].screenX;
-                handleCalendarSwipe();
+                const diff = touchEndX - touchStartX;
+                if (Math.abs(diff) < 55) return;
+                diff > 0 ? prevMonth() : nextMonth();
             }, { passive: true });
         }
 
-        function handleCalendarSwipe() {
-            const threshold = 55;
-            const diff = touchEndX - touchStartX;
-
-            if (Math.abs(diff) < threshold) return;
-
-            if (diff > 0) {
-                prevMonth();
-            } else {
-                nextMonth();
-            }
-        }
-
-        let modalStartY = 0;
-        let modalCurrentY = 0;
-        let isDraggingModal = false;
+        let modalStartY = 0, modalCurrentY = 0, isDraggingModal = false;
 
         function setupModalSwipeDown() {
             const modal = document.getElementById("resultPanel");
@@ -1012,9 +1307,7 @@
 
             modal.addEventListener('touchstart', function(e) {
                 const rect = modal.getBoundingClientRect();
-                const touchY = e.touches[0].clientY;
-
-                if (touchY - rect.top < 140) {
+                if (e.touches[0].clientY - rect.top < 140) {
                     modalStartY = e.touches[0].clientY;
                     isDraggingModal = true;
                     modal.style.transition = 'none';
@@ -1025,33 +1318,26 @@
 
             modal.addEventListener('touchmove', function(e) {
                 if (!isDraggingModal) return;
-
                 modalCurrentY = e.touches[0].clientY;
                 const deltaY = modalCurrentY - modalStartY;
-
                 if (deltaY > 0) {
                     modal.style.transform = `translateX(-50%) translateY(${deltaY}px)`;
-                    
-                    const backdrop = document.getElementById("modalBackdrop");
-                    const opacity = Math.max(0.55 - (deltaY / 350), 0.15);
-                    backdrop.style.opacity = opacity;
+                    document.getElementById("modalBackdrop").style.opacity = Math.max(0.5 - (deltaY / 350), 0.12);
                 }
             }, { passive: true });
 
             modal.addEventListener('touchend', function() {
                 if (!isDraggingModal) return;
-
                 const deltaY = modalCurrentY - modalStartY;
                 const modalEl = document.getElementById("resultPanel");
                 const backdrop = document.getElementById("modalBackdrop");
 
                 if (deltaY > 110) {
-                    modalEl.style.transition = 'transform 0.32s cubic-bezier(0.32, 0, 0.67, 1), opacity 0.32s ease';
+                    modalEl.style.transition = 'transform 0.3s cubic-bezier(0.32, 0, 0.67, 1), opacity 0.3s ease';
                     modalEl.style.transform = `translateX(-50%) translateY(130%)`;
                     modalEl.style.opacity = '0';
-                    backdrop.style.transition = 'opacity 0.32s ease';
+                    backdrop.style.transition = 'opacity 0.3s ease';
                     backdrop.style.opacity = '0';
-
                     setTimeout(() => {
                         closeExpiryModal();
                         modalEl.style.transform = '';
@@ -1059,19 +1345,17 @@
                         modalEl.style.transition = '';
                         backdrop.style.opacity = '';
                         backdrop.style.transition = '';
-                    }, 320);
+                    }, 300);
                 } else {
-                    modalEl.style.transition = 'transform 0.25s cubicEase(0.32, 0, 0.67, 1)';
+                    modalEl.style.transition = 'transform 0.22s cubic-bezier(0.32, 0, 0.67, 1)';
                     modalEl.style.transform = 'translateX(-50%) translateY(0)';
-                    backdrop.style.transition = 'opacity 0.25s ease';
-                    backdrop.style.opacity = '0.55';
-
+                    backdrop.style.transition = 'opacity 0.22s ease';
+                    backdrop.style.opacity = '0.5';
                     setTimeout(() => {
                         modalEl.style.transition = '';
                         backdrop.style.transition = '';
-                    }, 250);
+                    }, 220);
                 }
-
                 isDraggingModal = false;
                 modalCurrentY = 0;
             }, { passive: true });
@@ -1080,15 +1364,10 @@
         try {
             const savedCloseTime = localStorage.getItem("closeTime");
             broughtOutOverride = savedCloseTime ? parseInt(savedCloseTime) : 3;
-
             syncSectionsFromFlat();
-            renderProductList();
-
+            renderAll();
             const timeSelect = document.getElementById("timeToggle");
-            if (timeSelect) {
-                timeSelect.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3";
-            }
-
+            if (timeSelect) timeSelect.value = broughtOutOverride != null ? broughtOutOverride.toString() : "3";
             setTimeout(setupCalendarSwipe, 600);
             setTimeout(setupModalSwipeDown, 700);
         } catch (err) {

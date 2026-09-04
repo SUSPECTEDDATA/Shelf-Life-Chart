@@ -653,7 +653,8 @@
                 {name:"Nduja", days:12},
                 {name:"Chorizo", days:12},
                 {name:"Pepperoni Frozen", days:12},
-                {name:"Sausage", days:6}
+                {name:"Sausage", days:6},
+                {name:"Chinese Chicken", days:9}
             ]},
             { title: "Chicken Sides", items: [
                 {name:"Strippers", days:10},
@@ -684,7 +685,9 @@
                 {name:"Cookies", days:17},
                 {name:"Creme Egg Cookies", days:14},
                 {name:"Chocolate Caramel Cookies", days:14},
-                {name:"Chocolate Discs", manualDate: true}
+                {name:"Biscoff", days:30},
+                {name:"Chocolate Discs", manualDate: true},
+                {name:"White Chocolate Discs", manualDate: true}
             ]},
             { title: "Dips", items: [
                 {name: "Garlic 25g", manualDate: true},
@@ -756,6 +759,8 @@
             if (name === "Whirl Butter") return "W. Butter";
             if (name === "Cinnamon Sugar") return "C. Sugar";
             if (name === "Chocolate Discs") return "Choc Disc";
+            if (name === "White Chocolate Discs") return "W. Choc Disc";
+            if (name === "Chinese Chicken") return "CH Chicken";
             return name.replace(/ Ambient$/, '');
         }
 
